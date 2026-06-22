@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+# meda-fe — MEDA Frontend CLI. Scans a repo, decides new-vs-existing, installs skills, generates an
+# assessment report. The CLI does the scanning/reporting (no AI needed); the AI does the development
+# afterwards using the installed skills.
+#
+# Commands:
+#   meda-fe scan [--path DIR]      Scan the repo: empty → setup; existing → assessment report
+#   meda-fe setup [--path DIR]     Interactive: install skills + prepare a (new) frontend repo
+#   meda-fe assess [--path DIR]    Scan an existing repo and write ASSESSMENT.md
+#   meda-fe install [--path DIR]   Just install the skills (no scan)
+#   meda-fe verify [--path DIR]    Verify skills are installed
+#   meda-fe list                   List available skills
+#   meda-fe version | help
+
+set -euo pipefail
+
+resolve_self() {
+  local src="${BASH_SOURCE[0]}"
+  while [ -h "$src" ]; do local dir; dir="$(cd -P "$(dirname "$src")" && pwd)"; src="$(readlink "$src")"; [[ $src != /* ]] && src="$dir/$src"; done
+  cd -P "$(dirname "$src")" && pwd
+}
+BIN_DIR="$(resolve_self)"; ROOT_DIR="$(cd "$BIN_DIR/.." && pwd)"
+SRC_SKILLS="$ROOT_DIR/skills"; SRC_CLAUDE="$ROOT_DIR/templates/CLAUDE.md"
+VERSION="$(cat "$ROOT_DIR/VERSION" 2>/dev/null || echo dev)"
+g=$'\033[0;32m'; y=$'\033[0;33m'; r=$'\033[0;31m'; b=$'\033[0;34m'; off=$'\033[0m'
+ok(){ printf "${g}✓${off} %s\n" "$*"; }; warn(){ printf "${y}!${off} %s\n" "$*"; }; err(){ printf "${r}✗${off} %s\n" "$*" >&2; }; info(){ printf "%s\n" "$*"; }
+TARGET="$(pwd)"
+parse_path(){ while [ $# -gt 0 ]; do case "$1" in --path) TARGET="$2"; shift 2;; *) shift;; esac; done; }
+MARK_START="<!-- MEDA FE SKILLS START -->"; MARK_END="<!-- MEDA FE SKILLS END -->"
+
+# ---------- detection ----------
+is_empty_repo() {
+  # "empty" = no source files (ignores .git, hidden config, README)
+  local count
+  count="$(find "$TARGET" -maxdepth 2 -type f \
+    ! -path '*/.git/*' ! -name '.*' ! -name 'README*' ! -name 'LICENSE*' 2>/dev/null | wc -l | tr -d ' ')"
+  [ "$count" -eq 0 ]
+}
+has_file(){ [ -f "$TARGET/$1" ]; }
+detect(){ # echoes a key if found (each check tolerant to "not found")
+  local pj="$TARGET/package.json"
+  [ -f "$pj" ] || { echo "no-package-json"; return 0; }
+  echo "has-package-json"
+  grep -q '"next"' "$pj" && echo "has-next" || true
+  grep -q '"react"' "$pj" && echo "has-react" || true
+  grep -q '"typescript"' "$pj" && echo "has-ts" || true
+  grep -q '"tailwindcss"' "$pj" && echo "has-tailwind" || true
+  grep -q '"zustand"' "$pj" && echo "has-zustand" || true
+  grep -q '"@reduxjs/toolkit"' "$pj" && echo "has-redux" || true
+  grep -q '"@tanstack/react-query"' "$pj" && echo "has-tanstack" || true
+  grep -q '"swr"' "$pj" && echo "has-swr" || true
+  [ -f "$TARGET/pnpm-lock.yaml" ] && echo "has-pnpm" || true
+  [ -f "$TARGET/package-lock.json" ] && echo "has-npm" || true
+  [ -f "$TARGET/yarn.lock" ] && echo "has-yarn" || true
+  return 0
+}
+
+install_skills() {
+  mkdir -p "$TARGET/.claude/skills" "$TARGET/.gemini/skills"
+  cp -R "$SRC_SKILLS/." "$TARGET/.claude/skills/"
+  cp -R "$SRC_SKILLS/." "$TARGET/.gemini/skills/"
+  if [ ! -f "$TARGET/CLAUDE.md" ]; then cp "$SRC_CLAUDE" "$TARGET/CLAUDE.md";
+  elif ! grep -q "$MARK_START" "$TARGET/CLAUDE.md" 2>/dev/null; then
+    { printf "\n%s\n" "$MARK_START"; cat "$SRC_CLAUDE"; printf "%s\n" "$MARK_END"; } >> "$TARGET/CLAUDE.md"; fi
+  ok "Skills installed: .claude/skills + .gemini/skills ($(ls "$SRC_SKILLS" | wc -l | tr -d ' ') skills)"
+}
+
+# ---------- commands ----------
+cmd_scan() {
+  parse_path "$@"
+  info "${b}Scanning:${off} $TARGET"
+  if is_empty_repo; then
+    ok "Empty repo detected → this is a NEW frontend project."
+    info "Running interactive setup..."
+    cmd_setup --path "$TARGET"
+  else
+    ok "Existing code detected → generating assessment report."
+    cmd_assess --path "$TARGET"
+  fi
+}
+
+cmd_setup() {
+  parse_path "$@"
+  info "${b}MEDA Frontend setup (new project)${off}"
+  info "Answer a few questions (press Enter for the recommended default in [brackets])."
+  read -rp "1) Project type — full-app / landing / lib [full-app]: " p_type; p_type=${p_type:-full-app}
+  read -rp "2) State management — zustand / redux / none [zustand]: " p_state; p_state=${p_state:-zustand}
+  read -rp "3) Data fetching — tanstack / rsc / swr [tanstack]: " p_data; p_data=${p_data:-tanstack}
+  read -rp "4) Include MEDA UI base components — y/n [y]: " p_ui; p_ui=${p_ui:-y}
+  read -rp "5) Authentication (route guard) — y/n [n]: " p_auth; p_auth=${p_auth:-n}
+  read -rp "6) Connect to MEDA Java APIs — y/n [y]: " p_api; p_api=${p_api:-y}
+
+  install_skills
+
+  # Write the chosen architecture so the AI knows what to generate (handoff to AI)
+  cat > "$TARGET/MEDA-FE-SETUP.md" << EOF
+# MEDA Frontend — chosen setup (handoff for the AI)
+
+This file records the architecture chosen at setup. When you open this repo in Cursor/Claude Code
+and run \`/meda-fe-new\`, the AI reads this file and scaffolds exactly this:
+
+- Project type: **$p_type**
+- State management: **$p_state**
+- Data fetching: **$p_data**
+- MEDA UI base components: **$p_ui**
+- Authentication: **$p_auth**
+- Connect to MEDA Java APIs: **$p_api**
+- Package manager: **pnpm** · Framework: **Next.js 16 (App Router)** · Language: **TypeScript**
+
+## Next step
+Open this folder in your agent and type:  \`/meda-fe-new use the choices in MEDA-FE-SETUP.md\`
+The AI will generate the project structure, configs, and starter code per these choices.
+EOF
+  ok "Setup recorded in MEDA-FE-SETUP.md"
+  info ""
+  info "${b}Next step:${off} open this folder in Cursor/Claude Code and type:"
+  info "  ${b}/meda-fe-new use the choices in MEDA-FE-SETUP.md${off}"
+}
+
+cmd_assess() {
+  parse_path "$@"
+  local report="$TARGET/ASSESSMENT.md"
+  local d; d="$(detect)"
+  info "${b}Assessing existing repo...${off}"
+
+  # Resolve detected facts
+  has(){ echo "$d" | grep -q "^$1$"; }  # used in conditionals, safe
+  fw="Unknown"; has has-next && fw="Next.js"
+  lang="JavaScript"; has has-ts && lang="TypeScript"
+  pm="unknown"; has has-pnpm && pm="pnpm"; has has-npm && pm="npm"; has has-yarn && pm="yarn"
+  state="none detected"; has has-zustand && state="Zustand"; has has-redux && state="Redux Toolkit"
+  has has-zustand && has has-redux && state="Zustand AND Redux (⚠ both present)"
+  data="none detected"; has has-tanstack && data="TanStack Query"; has has-swr && data="SWR"
+
+  install_skills
+
+  {
+    echo "# Frontend Assessment — $(basename "$TARGET")"
+    echo ""
+    echo "_Generated by meda-fe v$VERSION on $(date +%Y-%m-%d). Static scan against MEDA frontend standards._"
+    echo ""
+    echo "## How this project is built (detected)"
+    echo "| Aspect | Detected | MEDA standard | Status |"
+    echo "|---|---|---|---|"
+    echo "| Framework | $fw | Next.js 16 App Router | $(has has-next && echo '✓' || echo '✗ review') |"
+    echo "| Language | $lang | TypeScript | $(has has-ts && echo '✓' || echo '✗ should be TS') |"
+    echo "| Package manager | $pm | pnpm | $([ "$pm" = pnpm ] && echo '✓' || echo '! prefer pnpm') |"
+    echo "| Styling | $(has has-tailwind && echo Tailwind || echo 'none detected') | Tailwind + tokens | $(has has-tailwind && echo '✓' || echo '! consider Tailwind') |"
+    echo "| State management | $state | Zustand (default) / Redux (complex) | $(echo "$state" | grep -q 'both' && echo '✗ pick one' || echo '✓/—') |"
+    echo "| Data fetching | $data | TanStack + RSC (recommended) | — |"
+    echo ""
+    echo "## Folder structure"
+    echo '```'
+    find "$TARGET" -maxdepth 2 -type d ! -path '*/.git/*' ! -path '*/node_modules/*' ! -path '*/.next/*' 2>/dev/null | sed "s|$TARGET|.|" | head -30
+    echo '```'
+    echo "_Compare against \`fe-project-structure\` (app/, components/ui, features/, lib/api, stores/)._"
+    echo ""
+    echo "## Security scan (static heuristics — confirm with /meda-fe-review)"
+    echo "| Check | Finding |"
+    echo "|---|---|"
+    # heuristic grep-based checks (best-effort, no AI)
+    local secrets ls_tokens any_count dnghtml nextpublic
+    # robust counter: never aborts under set -e
+    count_match(){ local n; n="$( { grep -rEl "$1" "$TARGET/src" "$TARGET/app" 2>/dev/null || true; } | wc -l | tr -d " ")"; echo "${n:-0}"; }
+    secrets="$(count_match "(apikey|api_key|api-key|secret|password|sk_live|sk_test)")"
+    ls_tokens="$(count_match "localStorage.*[Tt]oken")"
+    any_count="$(count_match ":[[:space:]]*any([[:space:]]|;|,|\)|>)")"
+    dnghtml="$(count_match "dangerouslySetInnerHTML")"
+    nextpublic="$(count_match "NEXT_PUBLIC_.*(SECRET|KEY|TOKEN)")"
+    echo "| Hardcoded secrets (key/secret/password literals) | ${secrets:-0} file(s) — P0 if >0 |"
+    echo "| Tokens in localStorage | ${ls_tokens:-0} file(s) — P0 if >0 |"
+    echo "| Secrets in NEXT_PUBLIC_* | ${nextpublic:-0} file(s) — P0 if >0 |"
+    echo "| \`dangerouslySetInnerHTML\` usage | ${dnghtml:-0} file(s) — review for XSS |"
+    echo "| \`: any\` occurrences (TS) | ${any_count:-0} — reduce; \`any\` is prohibited |"
+    echo ""
+    echo "> These are best-effort static checks. For a real review, open the repo in your agent and"
+    echo "> run \`/meda-fe-review\` (full standards) or \`/meda-fe-dev audit security\`."
+    echo ""
+    echo "## What to do next"
+    echo "1. Review this assessment with the team."
+    echo "2. To align the repo to standards, open it in your agent and run \`/meda-fe-dev\` and ask to"
+    echo "   unify structure / state / API client as needed."
+    echo "3. To develop, use the \`/meda-fe-*\` commands (skills are now installed in .claude/skills)."
+  } > "$report"
+
+  ok "Report written: ASSESSMENT.md"
+  info "Open it to see how the project is built and what diverges from MEDA standards."
+  info "Then develop with the /meda-fe-* commands in your agent."
+}
+
+cmd_install(){ parse_path "$@"; install_skills; }
+cmd_verify(){ parse_path "$@"; local e; e="$(ls "$SRC_SKILLS" | wc -l | tr -d ' ')";
+  for x in .claude/skills .gemini/skills; do
+    if [ -d "$TARGET/$x" ]; then local n; n="$(find "$TARGET/$x" -name SKILL.md|wc -l|tr -d ' ')"; [ "$n" -ge "$e" ] && ok "$x ($n)" || warn "$x has $n of $e"; else err "$x missing"; fi; done; }
+cmd_list(){ info "${b}Frontend skills (v$VERSION):${off}"; for s in "$SRC_SKILLS"/*/; do printf "  ${g}%s${off}\n" "$(basename "$s")"; done; }
+
+
+cmd_add() {
+  # meda-fe add <component> [--path DIR]   — copy a MEDA UI component into the repo (shadcn-style)
+  local comp=""
+  local args=()
+  while [ $# -gt 0 ]; do case "$1" in --path) TARGET="$2"; shift 2;; *) comp="$1"; shift;; esac; done
+  local UI_SRC="$ROOT_DIR/ui"
+  [ -d "$UI_SRC" ] || { err "UI source not found"; exit 1; }
+  # ensure base files exist in the repo
+  mkdir -p "$TARGET/components/ui" "$TARGET/lib" "$TARGET/styles"
+  [ -f "$TARGET/lib/cn.ts" ] || cp "$UI_SRC/lib/cn.ts" "$TARGET/lib/cn.ts"
+  [ -f "$TARGET/styles/meda-tokens.css" ] || cp "$UI_SRC/tokens/tokens.css" "$TARGET/styles/meda-tokens.css"
+  [ -f "$TARGET/meda-tailwind-preset.js" ] || cp "$UI_SRC/tokens/tailwind-preset.js" "$TARGET/meda-tailwind-preset.js"
+
+  if [ -z "$comp" ] || [ "$comp" = "all" ]; then
+    cp "$UI_SRC"/components/*.tsx "$UI_SRC"/components/index.ts "$TARGET/components/ui/" 2>/dev/null
+    ok "All MEDA UI components copied to components/ui/"
+  else
+    local f="$UI_SRC/components/$comp.tsx"
+    [ -f "$f" ] || { err "Unknown component: $comp"; info "Available:"; ls "$UI_SRC/components" | sed 's/.tsx//;s/index//' | grep -v '^$' | sed 's/^/  /'; exit 1; }
+    cp "$f" "$TARGET/components/ui/"
+    ok "Component '$comp' copied to components/ui/$comp.tsx"
+  fi
+  info ""
+  info "Remember: import the preset in tailwind.config and the tokens CSS in your root layout."
+  info "  tailwind:  presets: [require('./meda-tailwind-preset')]"
+  info "  layout:    import './styles/meda-tokens.css'"
+}
+
+usage(){ cat <<U
+${b}meda-fe v$VERSION${off} — MEDA Frontend CLI (scan, setup, assess, install)
+
+USAGE:
+  meda-fe scan [--path DIR]     Scan: empty repo → interactive setup; existing → assessment report
+  meda-fe setup [--path DIR]    Interactive setup for a NEW frontend repo (+ installs skills)
+  meda-fe assess [--path DIR]   Scan an EXISTING repo → writes ASSESSMENT.md (+ installs skills)
+  meda-fe add <component>       Copy a MEDA UI component into the repo (shadcn-style)
+  meda-fe install [--path DIR]  Install skills only
+  meda-fe verify | list | version | help
+
+FLOW:
+  1) cd into your repo (new or existing)
+  2) meda-fe scan          → the CLI decides what to do and installs the skills
+  3) open the folder in Cursor/Claude Code and use the /meda-fe-* commands
+U
+}
+
+case "${1:-help}" in
+  scan) shift; cmd_scan "$@";;
+  setup) shift; cmd_setup "$@";;
+  assess) shift; cmd_assess "$@";;
+  add) shift; cmd_add "$@";;
+  install) shift; cmd_install "$@";;
+  verify) shift; cmd_verify "$@";;
+  list) shift; cmd_list "$@";;
+  version|-v|--version) echo "meda-fe v$VERSION";;
+  help|-h|--help|*) usage;;
+esac

@@ -1,0 +1,91 @@
+/**
+ * MEDA UI — Design Tokens
+ * Derived from MEDA's MUI theme (Binance-style). Single source of truth for colors, radius, type.
+ * Used as CSS variables so light/dark work via the `.dark` class.
+ */
+
+:root {
+  /* Brand (Binance yellow) */
+  --meda-brand: #FCD535;
+  --meda-brand-light: #FDDD66;
+  --meda-brand-dark: #C99400;        /* hover gold */
+  --meda-brand-foreground: #0A0F14;  /* text on brand */
+
+  /* Surfaces (light) */
+  --meda-bg: #FCFCFC;
+  --meda-surface: #FFFFFF;           /* paper */
+  --meda-sidebar: #F5F6FA;
+  --meda-muted: #F5F6FA;
+
+  /* Text (light) */
+  --meda-fg: #0A0F14;                /* primary text / near-black */
+  --meda-fg-secondary: #6b7280;
+  --meda-fg-tertiary: #545454;
+  --meda-fg-disabled: #9ca3af;
+
+  /* Borders */
+  --meda-border: #E0E4EC;
+  --meda-border-btn: #B7BDC6;
+  --meda-divider: rgba(0,0,0,0.08);
+
+  /* Semantic */
+  --meda-success: #10b981;
+  --meda-success-light: #34d399;
+  --meda-success-dark: #059669;
+  --meda-error: #ef4444;
+  --meda-error-light: #f87171;
+  --meda-error-dark: #dc2626;
+  --meda-warning: #f59e0b;
+  --meda-warning-light: #fbbf24;
+  --meda-warning-dark: #d97706;
+  --meda-info: #3b82f6;
+  --meda-info-light: #60a5fa;
+  --meda-info-dark: #2563eb;
+  --meda-danger-text: #D93025;
+
+  /* Sidebar (light) */
+  --meda-sidebar-text: #5F6367;
+  --meda-sidebar-selected: #E6EBF3;
+  --meda-sidebar-selected-text: #0A0F14;
+  --meda-sidebar-hover: #FCD535;
+  --meda-sidebar-hover-text: #0A0F14;
+
+  /* Table (light) */
+  --meda-table-head-bg: #F5F6FA;
+  --meda-table-title: #0A0F14;
+  --meda-table-subtitle: #929AA5;
+  --meda-table-border: #EEE;
+
+  /* Shape & type */
+  --meda-radius: 8px;
+  --meda-font: "Binance Plex", system-ui, -apple-system, sans-serif;
+}
+
+.dark {
+  /* Surfaces (dark) */
+  --meda-bg: #141518;
+  --meda-surface: #181a20;           /* paper */
+  --meda-sidebar: #0a0f14;
+  --meda-muted: #2B3139;
+
+  /* Text (dark) */
+  --meda-fg: #f9fafb;
+  --meda-fg-secondary: #d1d5db;
+  --meda-fg-tertiary: #f9fafb;
+  --meda-fg-disabled: #6b7280;
+
+  /* Borders */
+  --meda-border: rgba(255,255,255,0.12);
+  --meda-divider: rgba(255,255,255,0.12);
+
+  /* Sidebar (dark) */
+  --meda-sidebar-text: #929AA5;
+  --meda-sidebar-selected: rgba(230,235,243,0.20);
+  --meda-sidebar-selected-text: #FFFFFF;
+  --meda-sidebar-hover-text: #0A0F14;
+
+  /* Table (dark) */
+  --meda-table-head-bg: #2B3139;
+  --meda-table-title: #FFFFFF;
+  --meda-table-border: #444;
+}
