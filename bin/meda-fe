@@ -25,7 +25,8 @@ VERSION="$(cat "$ROOT_DIR/VERSION" 2>/dev/null || echo dev)"
 g=$'\033[0;32m'; y=$'\033[0;33m'; r=$'\033[0;31m'; b=$'\033[0;34m'; off=$'\033[0m'
 ok(){ printf "${g}✓${off} %s\n" "$*"; }; warn(){ printf "${y}!${off} %s\n" "$*"; }; err(){ printf "${r}✗${off} %s\n" "$*" >&2; }; info(){ printf "%s\n" "$*"; }
 TARGET="$(pwd)"
-parse_path(){ while [ $# -gt 0 ]; do case "$1" in --path) TARGET="$2"; shift 2;; *) shift;; esac; done; }
+REPORT_ONLY=0
+parse_path(){ while [ $# -gt 0 ]; do case "$1" in --path) TARGET="$2"; shift 2;; --report-only) REPORT_ONLY=1; shift;; *) shift;; esac; done; }
 MARK_START="<!-- MEDA FE SKILLS START -->"; MARK_END="<!-- MEDA FE SKILLS END -->"
 
 # ---------- detection ----------
@@ -71,11 +72,16 @@ cmd_scan() {
   info "${b}Scanning:${off} $TARGET"
   if is_empty_repo; then
     ok "Empty repo detected → this is a NEW frontend project."
+    if [ "$REPORT_ONLY" = "1" ]; then
+      warn "Empty repo + --report-only: nothing to report. Run 'meda-fe setup' to scaffold instead."
+      return 0
+    fi
     info "Running interactive setup..."
     cmd_setup --path "$TARGET"
   else
     ok "Existing code detected → generating assessment report."
-    cmd_assess --path "$TARGET"
+    local fwd=""; [ "$REPORT_ONLY" = "1" ] && fwd="--report-only"
+    cmd_assess --path "$TARGET" $fwd
   fi
 }
 
@@ -122,6 +128,7 @@ cmd_assess() {
   local report="$TARGET/ASSESSMENT.md"
   local d; d="$(detect)"
   info "${b}Assessing existing repo...${off}"
+  [ "$REPORT_ONLY" = "1" ] && info "(report-only mode: will NOT install skills or modify the repo)"
 
   # Resolve detected facts
   has(){ echo "$d" | grep -q "^$1$"; }  # used in conditionals, safe
@@ -132,7 +139,11 @@ cmd_assess() {
   has has-zustand && has has-redux && state="Zustand AND Redux (⚠ both present)"
   data="none detected"; has has-tanstack && data="TanStack Query"; has has-swr && data="SWR"
 
-  install_skills
+  if [ "$REPORT_ONLY" = "1" ]; then
+    info "Skipping skill install (--report-only)."
+  else
+    install_skills
+  fi
 
   {
     echo "# Frontend Assessment — $(basename "$TARGET")"
@@ -229,7 +240,9 @@ ${b}meda-fe v$VERSION${off} — MEDA Frontend CLI (scan, setup, assess, install)
 USAGE:
   meda-fe scan [--path DIR]     Scan: empty repo → interactive setup; existing → assessment report
   meda-fe setup [--path DIR]    Interactive setup for a NEW frontend repo (+ installs skills)
-  meda-fe assess [--path DIR]   Scan an EXISTING repo → writes ASSESSMENT.md (+ installs skills)
+  meda-fe assess [--path DIR] [--report-only]
+                                Scan an EXISTING repo → writes ASSESSMENT.md
+                                --report-only: report only, do NOT install skills or modify the repo
   meda-fe add <component>       Copy a MEDA UI component into the repo (shadcn-style)
   meda-fe install [--path DIR]  Install skills only
   meda-fe verify | list | version | help
