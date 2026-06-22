@@ -55,6 +55,16 @@ If `meda-fe version` works, STEP 0 is done. You won't repeat this.
 
 ## STEP 1 — Use it in your project (pick your scenario)
 
+> **Use the explicit command for your case** (clearer and predictable):
+> - New project → `meda-fe new`
+> - Existing repo → `meda-fe assess`
+> - Just review → `meda-fe assess --report-only`
+>
+> `meda-fe scan` exists as an optional shortcut: if you don't know whether a folder is empty or has
+> code, it detects and routes to `new` or `assess` for you (and tells you what it decided). You don't
+> need it if you already know your case.
+
+
 The main command is `meda-fe scan`. It looks at the current folder and decides what to do.
 Always `cd` into YOUR project folder first.
 
@@ -64,10 +74,10 @@ Always `cd` into YOUR project folder first.
 mkdir ~/repos/my-new-app
 cd ~/repos/my-new-app
 
-meda-fe scan
+meda-fe new
 ```
 
-Detects the folder is empty -> runs an **interactive setup** that asks a few questions (Enter for the
+Runs an **interactive setup** that asks a few questions (Enter for the
 recommended default):
 
 ```
@@ -79,27 +89,54 @@ recommended default):
 6) Connect to MEDA Java APIs — y/n [y]
 ```
 
-Result: installs the skills and writes `MEDA-FE-SETUP.md` with your choices.
-**Next:** open the folder in Cursor/Claude Code and type:
+It also asks one more question:
 ```
-/meda-fe-new use the choices in MEDA-FE-SETUP.md
+7) Generate the Next.js project now (runs create-next-app + pnpm install) — y/n [y]
 ```
-The AI then generates the actual Next.js project following those choices.
+
+The setup now **explains the why of each question** and asks about **folder architecture** (3 options):
+- `by-type` — components/ hooks/ services/ (simple, small apps)
+- `by-feature` — features/<name>/ with their own components+hooks (balanced, recommended)
+- `screaming` — modules/<domain>/ per business domain (large apps/teams)
+
+It also shows a summary of your choices before generating.
+
+If you say **yes** (recommended), the CLI does everything for you:
+- Runs `create-next-app` (Next.js 16 + TypeScript + Tailwind + ESLint + App Router + Turbopack).
+- Installs your chosen deps (Zustand or Redux; TanStack Query or SWR; Zod; clsx/tailwind-merge).
+- Adds MEDA UI components if you chose yes.
+- Installs the skills.
+
+When it finishes, the project is ready:
+```
+cd my-new-app
+pnpm dev          # http://localhost:3000
+```
+
+Requires `pnpm` and Node.js 20.9+ installed. If you say **no** to question 7, it only records your
+choices in `MEDA-FE-SETUP.md` and you can generate later by opening the folder in your agent and
+typing `/meda-fe-new use MEDA-FE-SETUP.md`.
+
+> Note: a pnpm message about `approve-builds` (sharp, etc.) is normal and optional — the project
+> still works.
 
 ### Scenario B — Existing project (has code, you want to develop in it)
 
 ```bash
 cd ~/repos/my-existing-app
 
-meda-fe scan
+meda-fe assess
 ```
 
-Detects existing code -> writes `ASSESSMENT.md` (how the project is built + a security scan) AND
+Writes `ASSESSMENT.md` (how the project is built + a security scan) AND
 installs the skills.
 
 ```bash
 cat ASSESSMENT.md     # read how your project compares to MEDA standards
 ```
+
+If your repo uses npm or yarn, the report includes a step-by-step **guide to migrate to pnpm**
+(MEDA's standard) — safe and reversible, it changes how deps install, not your code.
 
 **Next:** open in Cursor and use the commands, e.g.:
 ```
@@ -170,8 +207,8 @@ meda-fe version | help
 
 | Your situation | Command |
 |---|---|
-| New empty project | `meda-fe scan` (-> setup) |
-| Existing repo, want to develop | `meda-fe scan` (-> assessment + skills) |
+| New empty project | `meda-fe new` |
+| Existing repo, want to develop | `meda-fe assess` |
 | Just review, touch nothing | `meda-fe assess --report-only` |
 | Need MEDA UI components | `meda-fe add all` |
 | Check skills are installed | `meda-fe verify` |

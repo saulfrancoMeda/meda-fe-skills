@@ -77,7 +77,7 @@ cmd_scan() {
       return 0
     fi
     info "Running interactive setup..."
-    cmd_setup --path "$TARGET"
+    cmd_new --path "$TARGET"
   else
     ok "Existing code detected → generating assessment report."
     local fwd=""; [ "$REPORT_ONLY" = "1" ] && fwd="--report-only"
@@ -85,27 +85,80 @@ cmd_scan() {
   fi
 }
 
-cmd_setup() {
+cmd_new() {
   parse_path "$@"
   info "${b}MEDA Frontend setup (new project)${off}"
-  info "Answer a few questions (press Enter for the recommended default in [brackets])."
-  read -rp "1) Project type — full-app / landing / lib [full-app]: " p_type; p_type=${p_type:-full-app}
-  read -rp "2) State management — zustand / redux / none [zustand]: " p_state; p_state=${p_state:-zustand}
-  read -rp "3) Data fetching — tanstack / rsc / swr [tanstack]: " p_data; p_data=${p_data:-tanstack}
-  read -rp "4) Include MEDA UI base components — y/n [y]: " p_ui; p_ui=${p_ui:-y}
-  read -rp "5) Authentication (route guard) — y/n [n]: " p_auth; p_auth=${p_auth:-n}
-  read -rp "6) Connect to MEDA Java APIs — y/n [y]: " p_api; p_api=${p_api:-y}
+  info "Each question has a short 'why' so you choose with context. Press Enter for the [default]."
+  info ""
 
-  install_skills
+  info "${b}1) Project type${off}"
+  info "   Why: it shapes how much structure you need. full-app = dashboards/portals with auth and"
+  info "   private routes; landing = marketing site; lib = an internal component library."
+  read -rp "   full-app / landing / lib [full-app]: " p_type; p_type=${p_type:-full-app}
+  info ""
 
-  # Write the chosen architecture so the AI knows what to generate (handoff to AI)
-  cat > "$TARGET/MEDA-FE-SETUP.md" << EOF
-# MEDA Frontend — chosen setup (handoff for the AI)
+  info "${b}2) Folder architecture${off}"
+  info "   Why: how you organize code as it grows. Three options:"
+  info "     by-type      → components/ hooks/ services/ (simple; good for small apps)"
+  info "     by-feature   → features/<name>/ each with its own components+hooks (balanced; RECOMMENDED)"
+  info "     screaming    → modules/<domain>/ everything per business domain (large apps/teams)"
+  read -rp "   by-type / by-feature / screaming [by-feature]: " p_arch; p_arch=${p_arch:-by-feature}
+  info ""
 
-This file records the architecture chosen at setup. When you open this repo in Cursor/Claude Code
-and run \`/meda-fe-new\`, the AI reads this file and scaffolds exactly this:
+  info "${b}3) State management${off}"
+  info "   Why: where shared UI state lives. Zustand = light, simple (most apps). Redux Toolkit ="
+  info "   heavier, for complex global state and many cross-feature slices. none = local state only."
+  read -rp "   zustand / redux / none [zustand]: " p_state; p_state=${p_state:-zustand}
+  info ""
+
+  info "${b}4) Data fetching${off}"
+  info "   Why: how you load server data. tanstack = TanStack Query (cache, retries, recommended for"
+  info "   client data). rsc = Server Components only (server-rendered). swr = lighter alternative."
+  read -rp "   tanstack / rsc / swr [tanstack]: " p_data; p_data=${p_data:-tanstack}
+  info ""
+
+  info "${b}5) MEDA UI base components${off}"
+  info "   Why: copies the Binance-style components (Button, Input, Card, Table...) into your repo so"
+  info "   the look is consistent from day one. You own the code (shadcn-style)."
+  read -rp "   include MEDA UI? y/n [y]: " p_ui; p_ui=${p_ui:-y}
+  info ""
+
+  info "${b}6) Authentication${off}"
+  info "   Why: if your app has private routes, this scaffolds session handling + a route guard."
+  info "   Say no for public sites or if auth is handled elsewhere."
+  read -rp "   add auth + route guard? y/n [n]: " p_auth; p_auth=${p_auth:-n}
+  info ""
+
+  info "${b}7) Connect to MEDA Java APIs${off}"
+  info "   Why: sets up the API client that handles MEDA's APIResponse convention (HTTP 200 with"
+  info "   status:ERROR) + Zod for validation. Say yes if this app talks to MEDA backend services."
+  read -rp "   set up the API client? y/n [y]: " p_api; p_api=${p_api:-y}
+  info ""
+
+  info "${b}8) Generate now${off}"
+  info "   Why: yes = the CLI runs create-next-app + installs everything, leaving it ready for"
+  info "   'pnpm dev'. no = only records your choices so you (or the AI) generate later."
+  read -rp "   generate the Next.js project now? y/n [y]: " p_gen; p_gen=${p_gen:-y}
+  info ""
+
+  # Summary before executing (CLI best practice: confirm the plan)
+  info "${b}Summary of your choices:${off}"
+  info "   type=$p_type  arch=$p_arch  state=$p_state  data=$p_data  ui=$p_ui  auth=$p_auth  api=$p_api  generate=$p_gen"
+  info ""
+
+  # Check prerequisites
+  if [ "$p_gen" = "y" ]; then
+    command -v pnpm >/dev/null 2>&1 || { err "pnpm not found. Install it first: npm i -g pnpm  (then re-run)"; exit 1; }
+    command -v node >/dev/null 2>&1 || { err "node not found. Install Node.js 20.9+ first."; exit 1; }
+  fi
+
+  # Helper to write the choices file (called at the right moment depending on the path)
+  write_setup_md() {
+    cat > "$TARGET/MEDA-FE-SETUP.md" << EOF
+# MEDA Frontend — chosen setup
 
 - Project type: **$p_type**
+- Folder architecture: **$p_arch**
 - State management: **$p_state**
 - Data fetching: **$p_data**
 - MEDA UI base components: **$p_ui**
@@ -113,14 +166,79 @@ and run \`/meda-fe-new\`, the AI reads this file and scaffolds exactly this:
 - Connect to MEDA Java APIs: **$p_api**
 - Package manager: **pnpm** · Framework: **Next.js 16 (App Router)** · Language: **TypeScript**
 
-## Next step
-Open this folder in your agent and type:  \`/meda-fe-new use the choices in MEDA-FE-SETUP.md\`
-The AI will generate the project structure, configs, and starter code per these choices.
+## Folder architecture chosen: $p_arch
+$(arch_explainer)
 EOF
-  ok "Setup recorded in MEDA-FE-SETUP.md"
+  }
+
+  arch_explainer() {
+    case "$p_arch" in
+      by-type) echo "Organize by technical type: src/components, src/hooks, src/services, src/stores. Simple, good for small apps.";;
+      screaming) echo "Organize by business domain: src/modules/<domain>/ (each with components, hooks, services). Best for large apps/teams.";;
+      *) echo "Organize by feature: src/features/<name>/ (each with components, hooks, api, types) + shared in src/components, src/lib. Balanced default.";;
+    esac
+  }
+
+  # Create the folder skeleton for the chosen architecture
+  scaffold_arch() {
+    local base="$TARGET/src"
+    mkdir -p "$base/lib" "$base/types"
+    case "$p_arch" in
+      by-type)   mkdir -p "$base/components" "$base/hooks" "$base/services" "$base/stores";;
+      screaming) mkdir -p "$base/modules" "$base/components/ui" "$base/stores";;
+      *)         mkdir -p "$base/features" "$base/components/ui" "$base/components/shared" "$base/hooks" "$base/lib/api" "$base/stores";;
+    esac
+  }
+
+  if [ "$p_gen" != "y" ]; then
+    write_setup_md
+    install_skills
+    ok "Setup recorded in MEDA-FE-SETUP.md (project NOT generated — you chose no)."
+    info "To generate later: open the folder in your agent and type '/meda-fe-new use MEDA-FE-SETUP.md'."
+    return 0
+  fi
+
+  # --- Generate the real Next.js project ---
+  local proj; proj="$(basename "$TARGET")"
   info ""
-  info "${b}Next step:${off} open this folder in Cursor/Claude Code and type:"
-  info "  ${b}/meda-fe-new use the choices in MEDA-FE-SETUP.md${off}"
+  info "${b}Generating Next.js project '$proj' (this downloads packages, takes a minute)...${off}"
+
+  # create-next-app needs an empty dir; it creates files in place with "."
+  # --yes uses defaults: TS + Tailwind + ESLint + App Router + Turbopack + src/ + @/* alias
+  ( cd "$TARGET" && pnpm create next-app@latest . --yes --use-pnpm ) || { err "create-next-app failed"; exit 1; }
+  ok "Next.js base created."
+  scaffold_arch
+  ok "Folder architecture scaffolded: $p_arch"
+  write_setup_md
+
+  # Extra dependencies per choices
+  local deps=""
+  case "$p_state" in zustand) deps="$deps zustand";; redux) deps="$deps @reduxjs/toolkit react-redux";; esac
+  case "$p_data" in tanstack) deps="$deps @tanstack/react-query";; swr) deps="$deps swr";; esac
+  [ "$p_api" = "y" ] && deps="$deps zod"          # forms/validation for API payloads
+  [ "$p_ui" = "y" ] && deps="$deps clsx tailwind-merge"
+  if [ -n "$deps" ]; then
+    info "Installing extra deps:$deps"
+    # pnpm may exit non-zero on build-script warnings even when deps were added; don't treat that as fatal.
+    ( cd "$TARGET" && pnpm add $deps ) || true
+    info "Extra deps processed. If pnpm mentions 'approve-builds', it's optional (sharp etc.)."
+  fi
+
+  # MEDA UI components
+  if [ "$p_ui" = "y" ]; then
+    cmd_add all --path "$TARGET" >/dev/null 2>&1 && ok "MEDA UI components added (components/ui/)."
+  fi
+
+  # Install skills + bootstrap
+  install_skills
+
+  ok "Project '$proj' is ready."
+  info ""
+  info "${b}Run it:${off}"
+  info "  cd "$TARGET" && pnpm dev"
+  info ""
+  info "${b}Then develop:${off} open the folder in Cursor/Claude Code and use /meda-fe-* (or natural language)."
+  [ "$p_ui" = "y" ] && info "MEDA UI: import './styles/meda-tokens.css' in your root layout and add the preset to tailwind config."
 }
 
 cmd_assess() {
@@ -187,6 +305,29 @@ cmd_assess() {
     echo "> These are best-effort static checks. For a real review, open the repo in your agent and"
     echo "> run \`/meda-fe-review\` (full standards) or \`/meda-fe-dev audit security\`."
     echo ""
+    if [ "$pm" != "pnpm" ] && [ "$pm" != "unknown" ]; then
+      echo "## Migrating to pnpm (you're using $pm)"
+      echo "MEDA standardizes on **pnpm** (faster, disk-efficient, strict dependency resolution). Migrating"
+      echo "is safe and reversible. Steps:"
+      echo ""
+      echo '```bash'
+      echo "# 1. Install pnpm if you don't have it"
+      echo "npm install -g pnpm"
+      echo ""
+      echo "# 2. Remove the old lockfile and node_modules"
+      if [ "$pm" = "yarn" ]; then echo "rm -rf node_modules yarn.lock"; else echo "rm -rf node_modules package-lock.json"; fi
+      echo ""
+      echo "# 3. Let pnpm import and install from package.json"
+      echo "pnpm install"
+      echo ""
+      echo "# 4. Update your scripts/CI/Docker to use 'pnpm' instead of $pm"
+      echo "#    e.g. '$pm run build' -> 'pnpm build',  '$pm install' -> 'pnpm install'"
+      echo '```'
+      echo ""
+      echo "> Note: this changes how dependencies are installed, not your code. Commit the new"
+      echo "> \`pnpm-lock.yaml\` and remove the old lockfile from git. Verify the app builds before pushing."
+      echo ""
+    fi
     echo "## What to do next"
     echo "1. Review this assessment with the team."
     echo "2. To align the repo to standards, open it in your agent and run \`/meda-fe-dev\` and ask to"
@@ -235,28 +376,38 @@ cmd_add() {
 }
 
 usage(){ cat <<U
-${b}meda-fe v$VERSION${off} — MEDA Frontend CLI (scan, setup, assess, install)
+${b}meda-fe v$VERSION${off} — MEDA Frontend CLI
 
-USAGE:
-  meda-fe scan [--path DIR]     Scan: empty repo → interactive setup; existing → assessment report
-  meda-fe setup [--path DIR]    Interactive setup for a NEW frontend repo (+ installs skills)
-  meda-fe assess [--path DIR] [--report-only]
-                                Scan an EXISTING repo → writes ASSESSMENT.md
-                                --report-only: report only, do NOT install skills or modify the repo
-  meda-fe add <component>       Copy a MEDA UI component into the repo (shadcn-style)
-  meda-fe install [--path DIR]  Install skills only
-  meda-fe verify | list | version | help
+PRIMARY COMMANDS (explicit — use these when you know your case):
+  meda-fe new                   NEW project: interactive setup + generates the Next.js app
+  meda-fe assess [--report-only]  EXISTING repo: writes ASSESSMENT.md (+ installs skills)
+                                  --report-only: report ONLY, don't install or modify anything
+  meda-fe add <component|all>   Copy a MEDA UI component into the repo
 
-FLOW:
-  1) cd into your repo (new or existing)
-  2) meda-fe scan          → the CLI decides what to do and installs the skills
-  3) open the folder in Cursor/Claude Code and use the /meda-fe-* commands
+CONVENIENCE:
+  meda-fe scan                  Don't know what you have? Detects empty-vs-existing and routes to
+                                'new' or 'assess'. Optional shortcut; prints what it decided.
+
+UTILITY:
+  meda-fe install               Install skills only (no scan/setup)
+  meda-fe verify                Verify skills are installed
+  meda-fe list                  List available skills
+  meda-fe version | help
+
+TYPICAL USE:
+  # New project (you know it's new):
+  mkdir my-app && cd my-app && meda-fe new
+  # Existing repo (develop in it):
+  cd my-repo && meda-fe assess
+  # Just review, touch nothing:
+  cd some-repo && meda-fe assess --report-only
 U
 }
 
 case "${1:-help}" in
   scan) shift; cmd_scan "$@";;
-  setup) shift; cmd_setup "$@";;
+  new) shift; cmd_new "$@";;
+  setup) shift; cmd_new "$@";;   # alias of new (backward compat)
   assess) shift; cmd_assess "$@";;
   add) shift; cmd_add "$@";;
   install) shift; cmd_install "$@";;
