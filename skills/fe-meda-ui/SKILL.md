@@ -43,3 +43,15 @@ NEVER hardcode `#FCD535` in a component — use `bg-brand`. (Prohibited: magic h
 - Components are copied (you own them) — customize freely, but keep token classes for theming.
 - All interactive components are keyboard-accessible (see `fe-accessibility`).
 - Add new shared primitives to MEDA UI rather than duplicating styles across features.
+
+## Utility layer (lib/) — installed with MEDA UI
+Besides components, `meda-fe add` installs reusable utilities under `lib/` (or `src/lib/`):
+- `lib/cn.ts` — className merger (clsx + tailwind-merge).
+- `lib/utils/format.ts` — `formatCurrency` (MXN), `formatNumber`, `formatDate`, `formatDateTime`.
+- `lib/utils/validators.ts` — `isValidRFC`, `isValidCURP`, `isValidCLABE`, `isValidEmail`, `isValidPhoneMX`.
+- `lib/utils/mask.ts` — `maskAccount`, `maskEmail`, `maskPhone` (PII masking for display).
+- `lib/api/client.ts` — `post`/`get` handling the MEDA APIResponse envelope + `MedaApiError`.
+
+Import via the `@/*` alias: `import { formatCurrency } from "@/lib/utils/format"`. Use these instead
+of re-implementing currency/date/validation logic per project — they keep MX fintech formatting and
+PII handling consistent. The `@/*` alias points to `src/*` (the CLI configures this).

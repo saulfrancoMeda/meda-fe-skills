@@ -1,4 +1,4 @@
-import { cn } from "../lib/cn";
+import { cn } from "@/lib/cn";
 export function Spinner({ className }: { className?: string }) {
   return (
     <svg className={cn("h-5 w-5 animate-spin text-brand", className)} viewBox="0 0 24 24" fill="none" role="status" aria-label="Loading">

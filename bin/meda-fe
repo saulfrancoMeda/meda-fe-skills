@@ -205,10 +205,19 @@ EOF
 
   # create-next-app needs an empty dir; it creates files in place with "."
   # --yes uses defaults: TS + Tailwind + ESLint + App Router + Turbopack + src/ + @/* alias
-  ( cd "$TARGET" && pnpm create next-app@latest . --yes --use-pnpm ) || { err "create-next-app failed"; exit 1; }
+  # --yes uses defaults; --src-dir forces app/ inside src/ for a consistent structure
+  ( cd "$TARGET" && pnpm create next-app@latest . --yes --use-pnpm --src-dir ) || { err "create-next-app failed"; exit 1; }
   ok "Next.js base created."
   scaffold_arch
   ok "Folder architecture scaffolded: $p_arch"
+
+  # Ensure the @/* alias points to src/* (create-next-app with src dir sets ./* — fix it so @/lib works)
+  if [ -d "$TARGET/src" ] && [ -f "$TARGET/tsconfig.json" ]; then
+    if grep -q '"@/\*": \["\./\*"\]' "$TARGET/tsconfig.json"; then
+      sed -i.bak 's|"@/\*": \["\./\*"\]|"@/*": ["./src/*"]|' "$TARGET/tsconfig.json" && rm -f "$TARGET/tsconfig.json.bak"
+      ok "Path alias @/* fixed to ./src/*"
+    fi
+  fi
   write_setup_md
 
   # Extra dependencies per choices
@@ -350,29 +359,38 @@ cmd_list(){ info "${b}Frontend skills (v$VERSION):${off}"; for s in "$SRC_SKILLS
 cmd_add() {
   # meda-fe add <component> [--path DIR]   — copy a MEDA UI component into the repo (shadcn-style)
   local comp=""
-  local args=()
   while [ $# -gt 0 ]; do case "$1" in --path) TARGET="$2"; shift 2;; *) comp="$1"; shift;; esac; done
   local UI_SRC="$ROOT_DIR/ui"
   [ -d "$UI_SRC" ] || { err "UI source not found"; exit 1; }
-  # ensure base files exist in the repo
-  mkdir -p "$TARGET/components/ui" "$TARGET/lib" "$TARGET/styles"
-  [ -f "$TARGET/lib/cn.ts" ] || cp "$UI_SRC/lib/cn.ts" "$TARGET/lib/cn.ts"
-  [ -f "$TARGET/styles/meda-tokens.css" ] || cp "$UI_SRC/tokens/tokens.css" "$TARGET/styles/meda-tokens.css"
+
+  # Detect base dir: if the project uses src/, install under src/; else at root.
+  local BASE="$TARGET"
+  [ -d "$TARGET/src" ] && BASE="$TARGET/src"
+
+  mkdir -p "$BASE/components/ui" "$BASE/lib" "$BASE/lib/utils" "$BASE/lib/api" "$BASE/styles"
+  [ -f "$BASE/lib/cn.ts" ] || cp "$UI_SRC/lib/cn.ts" "$BASE/lib/cn.ts"
+  # Copy the utility layer (format, validators, mask, API client) — what MEDA apps reuse
+  cp "$UI_SRC"/lib/utils/*.ts "$BASE/lib/utils/" 2>/dev/null
+  cp "$UI_SRC"/lib/api/*.ts "$BASE/lib/api/" 2>/dev/null
+  [ -f "$BASE/lib/index.ts" ] || cp "$UI_SRC/lib/index.ts" "$BASE/lib/index.ts"
+  [ -f "$BASE/styles/meda-tokens.css" ] || cp "$UI_SRC/tokens/tokens.css" "$BASE/styles/meda-tokens.css"
+  # tailwind preset goes at project root (where tailwind.config lives)
   [ -f "$TARGET/meda-tailwind-preset.js" ] || cp "$UI_SRC/tokens/tailwind-preset.js" "$TARGET/meda-tailwind-preset.js"
 
+  local rel="src/"; [ "$BASE" = "$TARGET" ] && rel=""
   if [ -z "$comp" ] || [ "$comp" = "all" ]; then
-    cp "$UI_SRC"/components/*.tsx "$UI_SRC"/components/index.ts "$TARGET/components/ui/" 2>/dev/null
-    ok "All MEDA UI components copied to components/ui/"
+    cp "$UI_SRC"/components/*.tsx "$UI_SRC"/components/index.ts "$BASE/components/ui/" 2>/dev/null
+    ok "All MEDA UI components copied to ${rel}components/ui/"
   else
     local f="$UI_SRC/components/$comp.tsx"
     [ -f "$f" ] || { err "Unknown component: $comp"; info "Available:"; ls "$UI_SRC/components" | sed 's/.tsx//;s/index//' | grep -v '^$' | sed 's/^/  /'; exit 1; }
-    cp "$f" "$TARGET/components/ui/"
-    ok "Component '$comp' copied to components/ui/$comp.tsx"
+    cp "$f" "$BASE/components/ui/"
+    ok "Component '$comp' copied to ${rel}components/ui/$comp.tsx"
   fi
   info ""
   info "Remember: import the preset in tailwind.config and the tokens CSS in your root layout."
   info "  tailwind:  presets: [require('./meda-tailwind-preset')]"
-  info "  layout:    import './styles/meda-tokens.css'"
+  info "  layout:    import '@/styles/meda-tokens.css'"
 }
 
 usage(){ cat <<U

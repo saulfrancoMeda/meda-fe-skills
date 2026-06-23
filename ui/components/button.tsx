@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { cn } from "../lib/cn";
+import { cn } from "@/lib/cn";
 
 type Variant = "primary" | "secondary" | "outline" | "link" | "export" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
@@ -17,13 +17,10 @@ const base =
   "disabled:pointer-events-none disabled:opacity-60";
 
 const variants: Record<Variant, string> = {
-  // Binance yellow primary: yellow bg, near-black text, gold on hover
   primary: "bg-brand text-brand-foreground hover:bg-brand-light active:bg-brand-dark",
   secondary: "bg-surface text-fg border border-border-default hover:text-brand-dark",
   outline: "border border-border-default bg-transparent text-fg hover:border-brand hover:text-brand-dark",
-  // linkButton from your theme: transparent, gold text → brighter yellow on hover
   link: "bg-transparent text-brand-dark hover:text-brand px-2",
-  // exportButton from your theme: transparent → yellow bg on hover
   export: "bg-transparent text-fg hover:bg-brand hover:text-brand-foreground",
   ghost: "bg-transparent text-fg hover:bg-muted",
   danger: "bg-error text-white hover:bg-error-dark",
@@ -31,7 +28,7 @@ const variants: Record<Variant, string> = {
 
 const sizes: Record<Size, string> = {
   sm: "h-9 px-3 text-sm",
-  md: "h-11 px-4 text-[15px]",   // 44px height, matches your theme
+  md: "h-11 px-4 text-[15px]",
   lg: "h-12 px-6 text-base",
 };
 
