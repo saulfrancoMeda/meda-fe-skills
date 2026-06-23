@@ -9,7 +9,7 @@ description: >
 
 # /meda-fe-component — Build a component under standards
 
-Loads `fe-components`, `fe-styling-tailwind`, `fe-accessibility`.
+Loads `fe-components`, `fe-styling-tailwind`, `fe-quality`.
 **Reply in the user's language.**
 
 ## Steps
@@ -19,7 +19,7 @@ Loads `fe-components`, `fe-styling-tailwind`, `fe-accessibility`.
 3. Style with Tailwind + MEDA design tokens (no magic hex values; use token classes). Responsive and
    dark-mode aware (`fe-styling-tailwind`).
 4. Accessibility: semantic HTML, ARIA where needed, keyboard navigation, labels, focus states
-   (`fe-accessibility`) — mandatory in fintech.
+   (`fe-quality`) — mandatory in fintech.
 5. Co-locate: component + its types + its test in the feature/component folder (`fe-project-structure`).
 6. If it's a reusable primitive (button/input/etc.), align it to MEDA UI conventions.
 

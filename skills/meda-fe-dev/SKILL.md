@@ -27,14 +27,17 @@ standards even if unmentioned. **Reply in the user's language.**
 ## STEP 1 — Classify and route (load 1-4 skills, never all 15; no subagents)
 - **New app** → `/meda-fe-new` (interactive: asks project type, state mgmt, data fetching, auth, API).
 - **Existing repo (unify)** → `/meda-fe-init` (detects what exists, proposes what to unify).
-- **New component** → `/meda-fe-component` (+ `fe-components`, `fe-styling-tailwind`, `fe-accessibility`).
+- **New component** → `/meda-fe-component` (+ `fe-components`, `fe-styling-tailwind`, `fe-quality`).
 - **Integrate an endpoint (most common)** → `/meda-fe-endpoint` (+ `fe-api-client`, `fe-data-fetching`).
-- **New page/route** → `fe-routing-navigation` + `fe-components`.
+- **New page/route** → `fe-project-structure` + `fe-components`.
 - **Tests** → `/meda-fe-test`.
 - **Review** → `/meda-fe-review`.
 
 ## STEP 2 — Always-on conventions
-Apply `fe-project-structure`, `fe-prohibited-practices`, and `fe-security` as the baseline for any
+Start any task by following `fe-dev-process` (the phases: understand → plan → build → verify → ship).
+When the backend endpoint isn't ready, use `fe-mocking` (MSW) instead of hardcoding fakes.
+Apply `fe-react-principles` (SRP, DRY, separation of concerns, edge cases), `fe-project-structure`,
+`fe-prohibited-practices`, `fe-security`, `fe-security` (incl. supply-chain + devops) as the baseline for any
 change. Detect the repo's real choices (Zustand vs Redux, TanStack vs SWR) and follow them; don't
 impose a different one without reason.
 

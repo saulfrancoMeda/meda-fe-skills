@@ -5,4 +5,11 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Badge } from "./badge";
 export { Spinner } from "./spinner";
 export { Table, THead, TR, TH, TD } from "./table";
+export { DataTable, type Column } from "./data-table";
 export { Dialog } from "./dialog";
+export { TransactionCard } from "./transaction-card";
+export { Avatar } from "./avatar";
+export { Tabs } from "./tabs";
+export { Select } from "./select";
+export { ToastProvider, useToast } from "./toast";
+export { PageTransition } from "./motion/page-transition";

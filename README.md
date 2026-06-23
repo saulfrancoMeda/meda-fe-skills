@@ -225,7 +225,11 @@ fe-api-client - fe-forms-validation - fe-styling-tailwind - fe-routing-navigatio
 fe-error-handling - fe-testing - fe-accessibility - fe-performance - fe-security -
 fe-prohibited-practices.
 
-Plus fe-meda-ui (documents the component library).
+Plus fe-meda-ui (component library), fe-react-principles (SRP/DRY/separation/edge cases applied to
+every component), and fe-dependency-security (supply-chain).
+
+See `docs/development-examples.md` for before/after code showing how the principles shape day-to-day
+development and speed up code reviews.
 
 After installing in a repo, type `/` in the agent chat to see them, or just write naturally
 ("integrate the payment endpoint") and the right skill activates.
@@ -251,6 +255,27 @@ Data: **TanStack Query + Server Components** recommended; SWR / RTK Query valid 
 | `git branch` shows nothing | You have no commits yet. Make sure files exist, then `git add . && git commit -m "..."` |
 
 ---
+
+## Multi-agent support
+
+`meda-fe new`/`assess`/`install` set up the skills for all four agents at once:
+- **Claude Code / Cursor** → `.claude/skills/` + `CLAUDE.md`
+- **Gemini CLI** → `.gemini/skills/`
+- **Codex CLI** → `.agents/skills/` + `AGENTS.md`
+- **VS Code (GitHub Copilot)** → `.github/copilot-instructions.md`
+
+## Dependency supply-chain security (fintech)
+
+MEDA pins **exact versions** (no `^`/`~`) for dependencies. A caret like `^1.2.3` lets a fresh install
+pull any `1.x.x` — if a future patch is compromised (a real supply-chain attack pattern), you'd get it
+silently. The CLI:
+- Installs deps with `pnpm add -E` (exact versions).
+- Strips carets from the base `package.json` and re-syncs the lockfile.
+- Pre-approves only vetted build scripts via `onlyBuiltDependencies`.
+- The `fe-dependency-security` skill documents the full policy (pin, commit lockfile, audit, vet new
+  packages, update deliberately in reviewed PRs).
+
+`meda-fe assess` flags caret ranges and a missing lockfile in its report.
 
 ## Maintenance
 

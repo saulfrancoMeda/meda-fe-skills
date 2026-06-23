@@ -1,30 +1,31 @@
 ---
 name: meda-fe-test
 description: >
-  Use to write or generate frontend tests for MEDA React/TypeScript code. Triggers on "write tests",
-  "test this component", "add coverage", "test the hook" / "escríbele tests", "prueba este
-  componente", "cobertura". Uses Vitest + Testing Library and covers the mandatory frontend scenarios
-  (render, interaction, loading/error/empty states, API mocks). Reply in the user's language.
+  Command to generate or improve tests for MEDA frontend code using Vitest + Testing Library,
+  following the fe-testing standard (money, validators, transaction states, forms, four UI states).
+  Invoke when the user asks to write tests, add coverage, or test a component/hook/utility. Triggers
+  on "write tests", "add tests", "test this", "meda-fe-test", "genera pruebas", "agrega tests".
 ---
+# /meda-fe-test — generate tests
 
-# /meda-fe-test — Frontend tests under standards
+Generate real, runnable tests for the target code. Load `fe-testing` for the standard.
 
-Loads `fe-testing`. **Reply in the user's language.**
+## Steps
+1. Read the target (component, hook, or utility) and identify what carries risk:
+   money/formatting, validators, state logic, forms, data-driven UI.
+2. Generate a `*.test.ts(x)` file next to it using Vitest + Testing Library.
+3. Cover, in priority order: money/rounding edge cases → validators (valid + invalid) → transaction
+   state mapping → form valid/invalid submit → the four UI states (mock the hook/query).
+4. Mock external calls (the API client, TanStack). Don't hit real endpoints.
+5. Use real assertions on behavior the user sees, not implementation details.
 
-## Mandatory scenarios (whichever apply)
-- **Component render**: renders with required props; matches expected structure.
-- **Interaction**: click/type/submit triggers the right behavior (userEvent).
-- **States**: loading, error, and empty states render correctly.
-- **Data hooks**: API success AND error (status:"ERROR") paths; mock the API client.
-- **Forms**: validation errors shown; submit blocked when invalid; valid submit calls the handler.
-- **A11y smoke**: key elements have accessible roles/labels.
+## Fintech must-cover (don't skip)
+- Amounts: zero, negative, large, fractional cents — formatting never loses/adds a cent.
+- Validators: RFC/CURP/CLABE/phone with valid and boundary-invalid inputs.
+- Transaction status → correct UI (badge/variant).
+- Forms: invalid input does NOT call the submit handler; valid input calls it with the right shape.
 
-## Standards
-- Vitest + @testing-library/react + @testing-library/user-event.
-- Test behavior, not implementation details. Query by role/label, not by test-id when avoidable.
-- Mock the API client / network; never hit real endpoints.
-- Naming: describe the behavior (`shows error toast when payment fails`).
-
-## Rules
-- Cover the error path, not just the happy path (a payment UI that only tests success is incomplete).
-- Each test must be able to fail if the component breaks.
+## Output
+- The test file(s), runnable with `pnpm test` (Vitest).
+- If Vitest isn't set up, note the deps to add (exact versions): vitest, @testing-library/react,
+  @testing-library/user-event, jsdom — and a minimal vitest.config.ts.

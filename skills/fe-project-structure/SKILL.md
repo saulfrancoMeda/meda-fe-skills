@@ -45,3 +45,13 @@ src/
 - Don't dump everything in `app/`. Routes in `app/`, logic in `features/` and `lib/`.
 - Shared only when used by 2+ features; otherwise keep it in the feature.
 - pnpm workspace if it grows to multiple packages.
+
+## Routing & navigation (App Router) — structure of routes
+- Route groups: `(public)` and `(private)` to separate guarded routes without affecting the URL.
+- Each segment can have: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`.
+- Dynamic segments: `[id]`; catch-all `[...slug]`. In Next 16, route params and `cookies()`/`headers()`
+  are async — await them.
+- `<Link>` for navigation (auto-prefetch); `useRouter()` for programmatic nav (client). Shared UI in
+  layouts (don't re-render across child routes).
+- Auth guard in `middleware.ts` (redirect unauthenticated from private paths) AND verify on the server
+  — never trust the client alone. Use `loading.tsx`/`error.tsx` per segment for streaming + boundaries.

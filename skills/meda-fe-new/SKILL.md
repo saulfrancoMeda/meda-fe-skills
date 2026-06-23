@@ -33,7 +33,7 @@ If the developer already gave some answers in their prompt, don't re-ask those; 
 - API client: if "connect to MEDA APIs" → `fe-api-client` (base client + APIResponse handling).
 - Auth: if yes → `fe-auth` (session, route guard, middleware).
 - MEDA UI: if yes → install base tokens + a starter set of components.
-- Always: `fe-error-handling` (error.tsx/loading.tsx), `fe-prohibited-practices`, `fe-security`.
+- Always: `fe-data-fetching` (error.tsx/loading.tsx), `fe-prohibited-practices`, `fe-security`.
 
 ## STEP 3 — Deliver
 - Runnable app (`pnpm dev`).

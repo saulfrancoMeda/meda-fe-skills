@@ -15,7 +15,7 @@ description: >
 - Refresh: handle 401/expired by refreshing once, then retry; on failure, redirect to login.
 
 ## Route guard
-- Middleware checks the token for `(private)` routes (see `fe-routing-navigation`).
+- Middleware checks the token for `(private)` routes (see `fe-project-structure`).
 - Server-side verification on protected pages — never rely on client-only checks.
 - A client `useAuth()` hook (backed by a Zustand store or context) exposes `user`/`isAuthenticated`
   for UI, but is NOT the security boundary.

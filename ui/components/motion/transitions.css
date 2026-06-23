@@ -1,0 +1,19 @@
+/* MEDA UI — page & element transitions */
+@keyframes meda-fade-slide {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.meda-page-enter {
+  animation: meda-fade-slide 0.28s ease-out;
+}
+
+@keyframes meda-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.meda-fade-in { animation: meda-fade-in 0.2s ease-out; }
+
+/* Respect reduced-motion accessibility preference */
+@media (prefers-reduced-motion: reduce) {
+  .meda-page-enter, .meda-fade-in { animation: none; }
+}

@@ -41,7 +41,7 @@ NEVER hardcode `#FCD535` in a component — use `bg-brand`. (Prohibited: magic h
 ## Rules
 - Use MEDA UI primitives instead of re-styling raw HTML; keeps the Binance look consistent.
 - Components are copied (you own them) — customize freely, but keep token classes for theming.
-- All interactive components are keyboard-accessible (see `fe-accessibility`).
+- All interactive components are keyboard-accessible (see `fe-quality`).
 - Add new shared primitives to MEDA UI rather than duplicating styles across features.
 
 ## Utility layer (lib/) — installed with MEDA UI

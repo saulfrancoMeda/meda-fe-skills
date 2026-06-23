@@ -50,7 +50,7 @@ export function useCreatePayment() {
 
 ## STEP 3 — Show usage and wire error/loading
 - Show a minimal component example using the hook, with loading and error states wired to the
-  project's error handling (`fe-error-handling`).
+  project's error handling (`fe-data-fetching`).
 - For reads, set sensible queryKey + staleTime. For writes, invalidate affected queries.
 
 ## Rules
@@ -58,3 +58,8 @@ export function useCreatePayment() {
 - Type everything; no `any` (that's a prohibited practice).
 - If the repo uses SWR instead of TanStack, generate the SWR equivalent — don't force TanStack.
 - Keep secrets/tokens out of client code; the API client attaches auth per `fe-auth`/`fe-security`.
+
+## When the endpoint isn't ready yet
+If the backend hasn't delivered the endpoint, don't hardcode a fake. Set up an MSW handler for the
+agreed contract (see `fe-mocking`), build the full TS types + client + hook against it, and flip the
+env flag to use the real endpoint when it lands. No fake code to remove later.

@@ -57,13 +57,32 @@ detect(){ # echoes a key if found (each check tolerant to "not found")
 }
 
 install_skills() {
-  mkdir -p "$TARGET/.claude/skills" "$TARGET/.gemini/skills"
+  local n; n="$(ls "$SRC_SKILLS" | wc -l | tr -d ' ')"
+  # Claude Code + Cursor
+  mkdir -p "$TARGET/.claude/skills"
   cp -R "$SRC_SKILLS/." "$TARGET/.claude/skills/"
+  # Gemini CLI
+  mkdir -p "$TARGET/.gemini/skills"
   cp -R "$SRC_SKILLS/." "$TARGET/.gemini/skills/"
+  # Codex CLI (reads .agents/skills + AGENTS.md)
+  mkdir -p "$TARGET/.agents/skills"
+  cp -R "$SRC_SKILLS/." "$TARGET/.agents/skills/"
+
+  # Bootstrap instruction file for Claude (CLAUDE.md)
   if [ ! -f "$TARGET/CLAUDE.md" ]; then cp "$SRC_CLAUDE" "$TARGET/CLAUDE.md";
   elif ! grep -q "$MARK_START" "$TARGET/CLAUDE.md" 2>/dev/null; then
     { printf "\n%s\n" "$MARK_START"; cat "$SRC_CLAUDE"; printf "%s\n" "$MARK_END"; } >> "$TARGET/CLAUDE.md"; fi
-  ok "Skills installed: .claude/skills + .gemini/skills ($(ls "$SRC_SKILLS" | wc -l | tr -d ' ') skills)"
+  # Codex reads AGENTS.md — point it at the skills
+  if [ ! -f "$TARGET/AGENTS.md" ]; then cp "$SRC_CLAUDE" "$TARGET/AGENTS.md";
+  elif ! grep -q "$MARK_START" "$TARGET/AGENTS.md" 2>/dev/null; then
+    { printf "\n%s\n" "$MARK_START"; cat "$SRC_CLAUDE"; printf "%s\n" "$MARK_END"; } >> "$TARGET/AGENTS.md"; fi
+  # VS Code (GitHub Copilot) project instructions
+  mkdir -p "$TARGET/.github"
+  if [ ! -f "$TARGET/.github/copilot-instructions.md" ]; then cp "$SRC_CLAUDE" "$TARGET/.github/copilot-instructions.md";
+  elif ! grep -q "$MARK_START" "$TARGET/.github/copilot-instructions.md" 2>/dev/null; then
+    { printf "\n%s\n" "$MARK_START"; cat "$SRC_CLAUDE"; printf "%s\n" "$MARK_END"; } >> "$TARGET/.github/copilot-instructions.md"; fi
+
+  ok "Skills installed: .claude + .gemini + .agents (Codex) + Copilot instructions ($n skills)"
 }
 
 # ---------- commands ----------
@@ -225,17 +244,87 @@ EOF
   case "$p_state" in zustand) deps="$deps zustand";; redux) deps="$deps @reduxjs/toolkit react-redux";; esac
   case "$p_data" in tanstack) deps="$deps @tanstack/react-query";; swr) deps="$deps swr";; esac
   [ "$p_api" = "y" ] && deps="$deps zod"          # forms/validation for API payloads
-  [ "$p_ui" = "y" ] && deps="$deps clsx tailwind-merge"
+  local devdeps=""
+  [ "$p_api" = "y" ] && devdeps="$devdeps msw"    # MSW for mocking endpoints not yet delivered
+  if [ "$p_ui" = "y" ]; then
+    deps="$deps clsx tailwind-merge react-hook-form zod @hookform/resolvers"  # MEDA UI + login form
+  fi
   if [ -n "$deps" ]; then
-    info "Installing extra deps:$deps"
-    # pnpm may exit non-zero on build-script warnings even when deps were added; don't treat that as fatal.
-    ( cd "$TARGET" && pnpm add $deps ) || true
+    info "Installing extra deps (exact versions, no caret):$deps"
+    # -E / --save-exact pins exact versions (fintech supply-chain safety: no caret ranges)
+    ( cd "$TARGET" && pnpm add -E $deps ) || true
     info "Extra deps processed. If pnpm mentions 'approve-builds', it's optional (sharp etc.)."
+  fi
+  if [ -n "$devdeps" ]; then
+    info "Installing dev deps (exact):$devdeps"
+    ( cd "$TARGET" && pnpm add -E -D $devdeps ) || true
+    # Set up MSW base structure + worker (so mocking is ready when an endpoint isn't delivered)
+    if echo "$devdeps" | grep -q msw; then
+      local sd2="$TARGET/src"; [ -d "$sd2" ] || sd2="$TARGET"
+      mkdir -p "$sd2/mocks/handlers"
+      ( cd "$TARGET" && npx --yes msw init public/ --save ) >/dev/null 2>&1 || true
+      cat > "$sd2/mocks/handlers/index.ts" << 'MSWEOF'
+// Add domain handler arrays here, e.g. import { transactionHandlers } from "./transactions";
+export const handlers = [];
+MSWEOF
+      cat > "$sd2/mocks/browser.ts" << 'MSWEOF'
+import { setupWorker } from "msw/browser";
+import { handlers } from "./handlers";
+export const worker = setupWorker(...handlers);
+MSWEOF
+      cat > "$sd2/mocks/server.ts" << 'MSWEOF'
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+export const server = setupServer(...handlers);
+MSWEOF
+      ok "MSW set up (src/mocks/). Enable with NEXT_PUBLIC_ENABLE_MSW=true in .env.development."
+    fi
+  fi
+
+  # Supply-chain hardening of package.json: pin the package manager + pre-approve known build scripts.
+  # Also strip carets from the base deps that create-next-app added with ^.
+  if [ -f "$TARGET/package.json" ]; then
+    node -e '
+      const fs=require("fs"); const p=process.argv[1]+"/package.json";
+      const pj=JSON.parse(fs.readFileSync(p));
+      const strip=(o)=>{ if(!o) return; for(const k of Object.keys(o)){ o[k]=String(o[k]).replace(/^[\^~]/,""); } };
+      strip(pj.dependencies); strip(pj.devDependencies);
+      pj.pnpm = pj.pnpm || {};
+      pj.pnpm.onlyBuiltDependencies = Array.from(new Set([...(pj.pnpm.onlyBuiltDependencies||[]), "sharp","unrs-resolver"]));
+      fs.writeFileSync(p, JSON.stringify(pj,null,2)+"\n");
+    ' "$TARGET" 2>/dev/null && ok "package.json hardened: exact versions (no caret) + build-script allowlist."
+    # Re-sync the lockfile to the pinned versions
+    ( cd "$TARGET" && pnpm install ) >/dev/null 2>&1 || true
   fi
 
   # MEDA UI components
   if [ "$p_ui" = "y" ]; then
-    cmd_add all --path "$TARGET" >/dev/null 2>&1 && ok "MEDA UI components added (components/ui/)."
+    local UI_SRC="$ROOT_DIR/ui"
+    set +e   # this block does best-effort file ops; don't abort on a non-zero check
+    cmd_add all --path "$TARGET" >/dev/null 2>&1
+    ok "MEDA UI components added (components/ui/, features/auth, motion)."
+    local sd="$TARGET/src"; [ -d "$sd" ] || sd="$TARGET"
+    # Replace the default Next.js home with the MEDA showcase page
+    if [ -f "$UI_SRC/templates/showcase-page.tsx" ] && [ -f "$sd/app/page.tsx" ]; then
+      cp "$UI_SRC/templates/showcase-page.tsx" "$sd/app/page.tsx"
+      ok "Home page replaced with MEDA UI showcase."
+    fi
+    # Append transitions CSS import + tokens import to globals if present
+    if [ -f "$sd/app/globals.css" ]; then
+      grep -q "meda-tokens.css" "$sd/app/globals.css" || \
+        printf '\n@import "../styles/meda-tokens.css";\n@import "../styles/transitions.css";\n' >> "$sd/app/globals.css"
+    fi
+    # Wire the Tailwind preset
+    if [ ! -f "$TARGET/tailwind.config.ts" ] && [ ! -f "$TARGET/tailwind.config.js" ]; then
+      cat > "$TARGET/tailwind.config.ts" << 'TWEOF'
+import type { Config } from "tailwindcss";
+import medaPreset from "./meda-tailwind-preset";
+const config: Config = { presets: [medaPreset as any], content: ["./src/**/*.{ts,tsx}"] };
+export default config;
+TWEOF
+      ok "tailwind.config.ts created with MEDA preset."
+    fi
+    set -e   # restore strict mode
   fi
 
   # Install skills + bootstrap
@@ -246,8 +335,11 @@ EOF
   info "${b}Run it:${off}"
   info "  cd "$TARGET" && pnpm dev"
   info ""
+  info "${y}If pnpm shows 'Ignored build scripts' (sharp, etc.):${off} run 'pnpm approve-builds' once and"
+  info "  approve the listed packages. One-time pnpm security prompt; safe to approve."
+  info ""
   info "${b}Then develop:${off} open the folder in Cursor/Claude Code and use /meda-fe-* (or natural language)."
-  [ "$p_ui" = "y" ] && info "MEDA UI: import './styles/meda-tokens.css' in your root layout and add the preset to tailwind config."
+  [ "$p_ui" = "y" ] && info "Showcase home included — you'll see all MEDA UI components at localhost:3000."
 }
 
 cmd_assess() {
@@ -310,6 +402,25 @@ cmd_assess() {
     echo "| Secrets in NEXT_PUBLIC_* | ${nextpublic:-0} file(s) — P0 if >0 |"
     echo "| \`dangerouslySetInnerHTML\` usage | ${dnghtml:-0} file(s) — review for XSS |"
     echo "| \`: any\` occurrences (TS) | ${any_count:-0} — reduce; \`any\` is prohibited |"
+    # Dependency supply-chain: caret/tilde ranges in package.json (fintech risk)
+    local carets="0"
+    [ -f "$TARGET/package.json" ] && carets="$( (grep -cE '"[~^]' "$TARGET/package.json" 2>/dev/null) || echo 0)"
+    local haslock="no"; { [ -f "$TARGET/pnpm-lock.yaml" ] || [ -f "$TARGET/package-lock.json" ] || [ -f "$TARGET/yarn.lock" ]; } && haslock="yes"
+    echo "| Caret/tilde version ranges in package.json | ${carets} dep(s) — pin exact for prod (supply-chain risk) |"
+    echo "| Lockfile committed | ${haslock} — must be 'yes' (reproducible, auditable installs) |"
+    # Infra security: scan Dockerfile + k8s manifests for plaintext secrets and PM mismatch
+    local infra_secrets="0" infra_files pm_mismatch="no"
+    infra_files="$( { find "$TARGET" -maxdepth 3 \( -iname "Dockerfile*" -o -iname "*.yaml" -o -iname "*.yml" \) -not -path "*/node_modules/*" 2>/dev/null || true; } )"
+    if [ -n "$infra_files" ]; then
+      # literal secret-like values (long al2num strings assigned to *KEY/TOKEN/SECRET, or AIza... google keys)
+      infra_secrets="$( { echo "$infra_files" | xargs grep -lEi '(TOKEN|KEY|SECRET)["'"'"' ]*[:=]["'"'"' ]*[A-Za-z0-9_-]{16,}|AIza[A-Za-z0-9_-]{20,}' 2>/dev/null || true; } | wc -l | tr -d ' ')"
+      # package-manager mismatch: repo is pnpm but a Dockerfile runs npm/yarn install
+      if [ "$pm" = "pnpm" ]; then
+        echo "$infra_files" | grep -i dockerfile | xargs grep -lE '(npm|yarn) install' >/dev/null 2>&1 && pm_mismatch="yes"
+      fi
+    fi
+    echo "| Plaintext secrets in Docker/k8s files | ${infra_secrets} file(s) — P0 if >0 (rotate + use Secrets) |"
+    echo "| Package manager: repo=$pm vs deploy | $([ "$pm_mismatch" = yes ] && echo 'MISMATCH — Dockerfile uses npm/yarn, repo uses pnpm' || echo 'consistent / n.a.') |"
     echo ""
     echo "> These are best-effort static checks. For a real review, open the repo in your agent and"
     echo "> run \`/meda-fe-review\` (full standards) or \`/meda-fe-dev audit security\`."
@@ -380,10 +491,17 @@ cmd_add() {
   local rel="src/"; [ "$BASE" = "$TARGET" ] && rel=""
   if [ -z "$comp" ] || [ "$comp" = "all" ]; then
     cp "$UI_SRC"/components/*.tsx "$UI_SRC"/components/index.ts "$BASE/components/ui/" 2>/dev/null
-    ok "All MEDA UI components copied to ${rel}components/ui/"
+    # motion (page transitions) + its CSS
+    mkdir -p "$BASE/components/ui/motion"
+    cp "$UI_SRC"/components/motion/*.tsx "$BASE/components/ui/motion/" 2>/dev/null
+    cp "$UI_SRC"/components/motion/*.css "$BASE/styles/" 2>/dev/null
+    # auth feature
+    mkdir -p "$BASE/features/auth"
+    cp "$UI_SRC"/features/auth/*.tsx "$BASE/features/auth/" 2>/dev/null
+    ok "All MEDA UI components copied to ${rel}components/ui/ (+ motion, features/auth)"
   else
     local f="$UI_SRC/components/$comp.tsx"
-    [ -f "$f" ] || { err "Unknown component: $comp"; info "Available:"; ls "$UI_SRC/components" | sed 's/.tsx//;s/index//' | grep -v '^$' | sed 's/^/  /'; exit 1; }
+    [ -f "$f" ] || { err "Unknown component: $comp"; info "Available:"; ls "$UI_SRC/components"/*.tsx | xargs -n1 basename | sed 's/.tsx//' | sed 's/^/  /'; exit 1; }
     cp "$f" "$BASE/components/ui/"
     ok "Component '$comp' copied to ${rel}components/ui/$comp.tsx"
   fi

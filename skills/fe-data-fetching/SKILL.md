@@ -21,7 +21,7 @@ description: >
 
 ## States — always handle the three
 Every data UI handles: **loading**, **error**, and **empty**. Never render assuming data exists.
-Wire errors to the project's error handling (`fe-error-handling`).
+Wire errors to the project's error handling (`fe-data-fetching`).
 
 ## With MEDA APIs
 All calls go through the API client (`fe-api-client`), which handles the APIResponse envelope and
@@ -31,3 +31,13 @@ status:"ERROR". Hooks call the client functions, not fetch directly.
 - Don't put server data in a global store; the query cache IS the state.
 - Don't fetch in useEffect when a Server Component or a query hook fits.
 - Always handle the error path (especially status:"ERROR" from MEDA APIs).
+
+## Error handling (part of fetching — always handle these together)
+- **Route error boundaries**: `error.tsx` per segment catches render errors with a recovery action.
+- **API errors**: the client throws `MedaApiError` (from status:"ERROR"); hooks surface it; UI shows a
+  friendly message (toast or inline), mapping `errorCode` to readable text when useful.
+- **The four states together**: loading, error, empty, success — never handle one without the others.
+- UX: friendly, actionable messages; never dump stack traces/raw codes to users. Toasts for transient
+  errors, inline for form/field errors, full-page fallback for fatal.
+- Log errors to the observability pipeline with context (route, action) but NO PII (see fe-observability).
+- Never swallow errors silently; every fetch and mutation handles its error path.
