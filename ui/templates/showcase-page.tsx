@@ -62,6 +62,7 @@ export default function Home() {
           <header className="mb-10 flex items-center justify-between">
             <MedaLogo className="h-8 text-fg" />
             <div className="flex items-center gap-3">
+              <Link href="/" className="text-sm text-fg-secondary hover:text-fg">Home</Link>
               <Link href="/components" className="text-sm text-fg-secondary hover:text-fg">All components →</Link>
               <Badge variant="brand">MEDA UI</Badge>
               <ThemeToggle />

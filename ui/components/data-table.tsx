@@ -18,9 +18,18 @@ interface DataTableProps<T> {
   data: T[];
   rowKey: (row: T) => string;
   emptyMessage?: string;
+  /** Cursor pagination (for large datasets / millions of rows). Optional — omit for static tables. */
+  pagination?: {
+    onNext?: () => void;          // load next page (server fetches by cursor)
+    onPrev?: () => void;          // load previous page
+    hasNext?: boolean;
+    hasPrev?: boolean;
+    loading?: boolean;
+    pageLabel?: string;           // e.g. "Page 3" or "1–50 of many"
+  };
 }
 
-export function DataTable<T>({ columns, data, rowKey, emptyMessage = "No data" }: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, rowKey, emptyMessage = "No data", pagination }: DataTableProps<T>) {
   const [sortKey, setSortKey] = React.useState<string | null>(null);
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
   const [density, setDensity] = React.useState<Density>("comfortable");
@@ -108,6 +117,26 @@ export function DataTable<T>({ columns, data, rowKey, emptyMessage = "No data" }
           </tbody>
         </table>
       </div>
+
+      {pagination && (
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-fg-secondary">{pagination.pageLabel ?? ""}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={pagination.onPrev}
+              disabled={!pagination.hasPrev || pagination.loading}
+              className="rounded-meda border border-border-default px-3 py-1.5 text-sm text-fg disabled:opacity-40 hover:bg-muted">
+              Previous
+            </button>
+            <button
+              onClick={pagination.onNext}
+              disabled={!pagination.hasNext || pagination.loading}
+              className="rounded-meda border border-border-default px-3 py-1.5 text-sm text-fg disabled:opacity-40 hover:bg-muted">
+              {pagination.loading ? "Loading…" : "Next"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

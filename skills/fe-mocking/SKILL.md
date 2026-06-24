@@ -68,3 +68,52 @@ http.post(`${BASE}/transaction/v1/create`, async () => {
 - Commit `public/mockServiceWorker.js` (it's the generated worker).
 - Keep handlers per domain; reuse the same handlers for tests (see fe-testing).
 - Use `onUnhandledRequest: "bypass"` so un-mocked endpoints hit the real backend (partial mocking).
+
+## Full example — develop a feature whose endpoint doesn't exist yet
+
+Backend hasn't built `GET /account/v1/movements`. You agree the contract, mock it, and build the whole
+feature. When the real endpoint lands, you flip one flag — nothing in your app code changes.
+
+```ts
+// src/mocks/handlers/movements.ts — the mock (OUTSIDE app code)
+import { http, HttpResponse, delay } from "msw";
+const BASE = process.env.NEXT_PUBLIC_API_URI_BASE;
+
+export const movementHandlers = [
+  http.get(`${BASE}/account/v1/movements`, async () => {
+    await delay(400);                              // simulate latency so you test the loading state
+    return HttpResponse.json({
+      status: "OK", errorCode: null, errorMessage: null,
+      data: [
+        { id: "MOV-1", amount: 1500, type: "DEPOSIT", date: "2026-06-22T09:00:00" },
+        { id: "MOV-2", amount: -320, type: "WITHDRAWAL", date: "2026-06-22T14:30:00" },
+      ],
+    });
+  }),
+];
+```
+
+```ts
+// src/mocks/handlers/index.ts — register it
+import { movementHandlers } from "./movements";
+export const handlers = [...movementHandlers];
+```
+
+```ts
+// src/lib/api/account.ts — your REAL service. Note: it calls the real path, knows nothing about MSW.
+import { get } from "@/lib/api/client";
+export interface Movement { id: string; amount: number; type: string; date: string; }
+export const getMovements = () => get<Movement[]>("/account/v1/movements");
+```
+
+Now build the hook + component normally (see `meda-fe-endpoint`). In dev, with
+`NEXT_PUBLIC_ENABLE_MSW=true`, MSW answers the request. You can develop and test all four states
+(including the latency-driven loading and an error variant if you add one).
+
+**When the real endpoint ships:** set `NEXT_PUBLIC_ENABLE_MSW=false` (or remove the handler). Your
+`getMovements`, hook, and component are untouched — the mock never lived in them. That's the whole
+point: no fake code to find and delete.
+
+## Also use the handlers in tests
+The same `handlers` work in Vitest via `setupServer` (see `fe-testing`), so your tests run against the
+agreed contract without hitting a real backend.

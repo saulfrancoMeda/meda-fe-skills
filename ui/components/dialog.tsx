@@ -21,12 +21,12 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden />
+      <div className="meda-fade-in absolute inset-0 bg-black/50" onClick={onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={cn("relative z-10 w-full max-w-md rounded-meda bg-surface border border-border-default shadow-xl", className)}
+        className={cn("meda-dialog-in relative z-10 w-full max-w-md rounded-meda bg-surface border border-border-default shadow-xl", className)}
       >
         {title && (
           <div className="flex items-center justify-between border-b border-border-default p-5">

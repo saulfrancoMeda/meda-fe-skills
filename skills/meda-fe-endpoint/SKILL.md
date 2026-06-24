@@ -63,3 +63,49 @@ export function useCreatePayment() {
 If the backend hasn't delivered the endpoint, don't hardcode a fake. Set up an MSW handler for the
 agreed contract (see `fe-mocking`), build the full TS types + client + hook against it, and flip the
 env flag to use the real endpoint when it lands. No fake code to remove later.
+
+## Example — "integrate GET /account/v1/balance"
+
+The full three-layer output any dev should produce. The component asks the hook; the hook asks the
+service; the service handles the MEDA APIResponse envelope.
+
+```ts
+// 1. src/lib/api/account.ts — the service (handles the envelope + types)
+import { get } from "@/lib/api/client";
+
+export interface Balance { available: number; pending: number; currency: string; }
+
+export function getBalance(): Promise<Balance> {
+  return get<Balance>("/account/v1/balance");   // unwraps APIResponse, throws MedaApiError on status:ERROR
+}
+```
+
+```ts
+// 2. src/features/account/hooks/useBalance.ts — the logic (state, cache, edge cases)
+import { useQuery } from "@tanstack/react-query";
+import { getBalance } from "@/lib/api/account";
+
+export function useBalance() {
+  return useQuery({ queryKey: ["balance"], queryFn: getBalance, staleTime: 30_000 });
+}
+```
+
+```tsx
+// 3. src/features/account/components/BalancePanel.tsx — presentational, four states
+"use client";
+import { useBalance } from "../hooks/useBalance";
+import { BalanceCard } from "./BalanceCard";
+import { Spinner } from "@/components/ui/spinner";
+
+export function BalancePanel() {
+  const { data, isLoading, isError, refetch } = useBalance();
+  if (isLoading) return <Spinner />;
+  if (isError) return <button onClick={() => refetch()} className="text-error">Couldn't load. Retry</button>;
+  if (!data) return <p className="text-fg-secondary">No balance available.</p>;
+  return <BalanceCard available={data.available} currency={data.currency} />;
+}
+```
+
+Why: each file one responsibility (SRP), types from the contract (no `any`), the envelope handled in
+the client (status:ERROR → MedaApiError → caught as isError), all four states covered. When the
+endpoint isn't ready, mock it first (see `fe-mocking`) — the three layers don't change.

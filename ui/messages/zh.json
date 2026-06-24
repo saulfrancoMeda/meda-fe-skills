@@ -1,0 +1,23 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "empty": "无数据",
+    "retry": "重试",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认"
+  },
+  "nav": {
+    "home": "首页",
+    "components": "组件",
+    "showcase": "展示"
+  },
+  "transactions": {
+    "title": "交易",
+    "amount": "金额",
+    "status": "状态",
+    "date": "日期",
+    "merchant": "商户"
+  }
+}

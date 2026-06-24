@@ -1,0 +1,23 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "empty": "Sin datos",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
+  },
+  "nav": {
+    "home": "Inicio",
+    "components": "Componentes",
+    "showcase": "Showcase"
+  },
+  "transactions": {
+    "title": "Transacciones",
+    "amount": "Monto",
+    "status": "Estado",
+    "date": "Fecha",
+    "merchant": "Comercio"
+  }
+}

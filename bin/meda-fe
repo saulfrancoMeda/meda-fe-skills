@@ -154,6 +154,12 @@ cmd_new() {
   read -rp "   set up the API client? y/n [y]: " p_api; p_api=${p_api:-y}
   info ""
 
+  info "${b}8) Multi-language (i18n)${off}"
+  info "   Why: international teams (es/en/zh). Sets up next-intl with a language switcher so the app"
+  info "   can be shown in Spanish, English or Chinese. Recommended for shared/internal tools."
+  read -rp "   add i18n (es/en/zh)? y/n [y]: " p_i18n; p_i18n=${p_i18n:-y}
+  info ""
+
   info "${b}8) Generate now${off}"
   info "   Why: yes = the CLI scaffolds the full MEDA Next.js project + installs everything, ready for"
   info "   'pnpm dev'. no = only records your choices so you (or the AI) generate later."
@@ -360,6 +366,35 @@ CSSEOF
     set -e   # restore strict mode
   fi
 
+  # i18n (next-intl) — international teams (es/en/zh)
+  if [ "$p_i18n" = "y" ]; then
+    set +e
+    info "Installing i18n (next-intl)..."
+    ( cd "$TARGET" && pnpm add -E next-intl ) >/dev/null 2>&1
+    local sdi="$TARGET/src"; [ -d "$sdi" ] || sdi="$TARGET"
+    mkdir -p "$sdi/i18n" "$TARGET/messages" "$sdi/features/i18n"
+    cp "$UI_SRC"/i18n/request.ts "$sdi/i18n/request.ts" 2>/dev/null
+    cp "$UI_SRC"/messages/*.json "$TARGET/messages/" 2>/dev/null
+    cp "$UI_SRC"/features/i18n/*.tsx "$sdi/features/i18n/" 2>/dev/null
+    # next.config: wrap with next-intl plugin
+    if [ -f "$TARGET/next.config.ts" ]; then
+      cat > "$TARGET/next.config.ts" << 'NCEOF'
+import createNextIntlPlugin from "next-intl/plugin";
+import type { NextConfig } from "next";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+const nextConfig: NextConfig = {};
+export default withNextIntl(nextConfig);
+NCEOF
+    fi
+    # Auto-wrap the layout with NextIntlClientProvider (robust python helper)
+    if [ -f "$sdi/app/layout.tsx" ]; then
+      python3 "$ROOT_DIR/bin/wrap-i18n-layout.py" "$sdi/app/layout.tsx" 2>/dev/null && ok "Layout wrapped with NextIntlClientProvider."
+    fi
+    ok "i18n set up (next-intl, es/en/zh). See docs/i18n.md."
+    set -e
+  fi
+
   # Install skills + bootstrap
   install_skills
 
@@ -515,6 +550,8 @@ cmd_add() {
   [ -f "$BASE/lib/cn.ts" ] || cp "$UI_SRC/lib/cn.ts" "$BASE/lib/cn.ts"
   # Copy the utility layer (format, validators, mask, API client) — what MEDA apps reuse
   cp "$UI_SRC"/lib/utils/*.ts "$BASE/lib/utils/" 2>/dev/null
+  mkdir -p "$BASE/lib/hooks"
+  cp "$UI_SRC"/lib/hooks/*.ts "$BASE/lib/hooks/" 2>/dev/null
   cp "$UI_SRC"/lib/api/*.ts "$BASE/lib/api/" 2>/dev/null
   [ -f "$BASE/lib/index.ts" ] || cp "$UI_SRC/lib/index.ts" "$BASE/lib/index.ts"
   [ -f "$BASE/styles/meda-tokens.css" ] || cp "$UI_SRC/tokens/tokens.css" "$BASE/styles/meda-tokens.css"

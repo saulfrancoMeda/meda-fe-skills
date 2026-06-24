@@ -1,0 +1,23 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "empty": "No data",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "nav": {
+    "home": "Home",
+    "components": "Components",
+    "showcase": "Showcase"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "amount": "Amount",
+    "status": "Status",
+    "date": "Date",
+    "merchant": "Merchant"
+  }
+}

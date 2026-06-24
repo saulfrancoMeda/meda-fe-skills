@@ -41,3 +41,30 @@ status:"ERROR". Hooks call the client functions, not fetch directly.
   errors, inline for form/field errors, full-page fallback for fatal.
 - Log errors to the observability pipeline with context (route, action) but NO PII (see fe-observability).
 - Never swallow errors silently; every fetch and mutation handles its error path.
+
+## Pagination for large datasets (millions of rows)
+Two approaches — know when to use each:
+
+### Cursor pagination (RECOMMENDED for ledgers / transactions)
+The server returns a `nextCursor` (an opaque pointer to the last row). You ask for "the next N after
+this cursor". Stable even as new rows arrive; doesn't slow down on deep pages.
+- Use for: transaction lists, movements, anything large or frequently appended.
+- MEDA UI: the `DataTable` accepts a `pagination` prop (onNext/onPrev/hasNext/hasPrev/loading).
+- Hook: `useCursorPagination(fetchPage)` where `fetchPage(cursor)` returns `{ data, nextCursor }`.
+- Why not expose offsets: the cursor is opaque, so you don't leak internal row counts/indices, and a
+  row isn't shown twice or skipped when data changes between pages.
+
+```ts
+const tx = useCursorPagination((cursor) =>
+  getTransactionsPage({ cursor, limit: 50 })   // server returns { data, nextCursor }
+);
+// <DataTable data={tx.data} pagination={{ onNext: tx.next, onPrev: tx.prev,
+//   hasNext: tx.hasNext, hasPrev: tx.hasPrev, loading: tx.loading, pageLabel: `Page ${tx.page}` }} ... />
+```
+
+### Offset pagination (simpler, for small/bounded data)
+`?page=2&pageSize=50` → server skips `(page-1)*pageSize`. Easy "page 1,2,3…" UI. But on millions of
+rows deep pages get slow (the DB still scans skipped rows), and rows can shift if data changes.
+- Use for: small admin lists, settings, anything with a known small total.
+
+Default to cursor for transaction/ledger data; offset only for small bounded lists.

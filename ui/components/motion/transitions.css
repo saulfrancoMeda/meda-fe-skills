@@ -28,3 +28,13 @@
 @media (prefers-reduced-motion: reduce) {
   .meda-pop { animation: none; }
 }
+
+/* Dialog / modal entrance (centered pop) */
+@keyframes meda-dialog-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.meda-dialog-in { animation: meda-dialog-in 0.18s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .meda-dialog-in { animation: none; }
+}

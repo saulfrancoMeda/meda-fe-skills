@@ -228,7 +228,7 @@ fe-prohibited-practices.
 Plus fe-meda-ui (component library), fe-react-principles (SRP/DRY/separation/edge cases applied to
 every component), and fe-dependency-security (supply-chain).
 
-See `docs/development-examples.md` for before/after code showing how the principles shape day-to-day
+See `docs/cookbook.md` for a full feature built end-to-end (mock → 3 layers → test → review), and `docs/development-examples.md` for before/after code showing how the principles shape day-to-day
 development and speed up code reviews.
 
 After installing in a repo, type `/` in the agent chat to see them, or just write naturally
