@@ -17,7 +17,7 @@ export function Popover({ trigger, children, align = "left", className }: Popove
   }, [open]);
   return (
     <div ref={ref} className="relative inline-block">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}>{trigger}</button>
+      <span onClick={() => setOpen((o) => !o)} className="inline-flex cursor-pointer" aria-expanded={open}>{trigger}</span>
       {open && (
         <div className={cn("meda-pop absolute z-20 mt-1 w-64 rounded-meda border border-border-default bg-surface p-3 shadow-lg",
           align === "right" ? "right-0" : "left-0", className)}>

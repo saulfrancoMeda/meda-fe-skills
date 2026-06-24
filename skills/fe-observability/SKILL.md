@@ -48,3 +48,7 @@ Answers: is the service alive? (used by Kubernetes liveness/readiness to restart
 - No PII in any analytics event or error report — fintech regulatory requirement.
 - Don't use GA4/GTM as an outage detector; use real-time error monitoring with alerts.
 - Report errors with trace id + endpoint + code, never payload/PII.
+
+## Visualizing metrics
+For dashboards and metric visualization in the UI, use the MEDA charts (Recharts wrappers) —
+see fe-meda-ui. AreaTrendChart for trends, BarVolumeChart for volume, LineMetricChart for rates.

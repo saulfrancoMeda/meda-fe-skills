@@ -183,3 +183,23 @@ Ask: *"show the account statement PDF with search"*
 ```
 Why opt-in: react-pdf is heavy and not every app needs it — keeping it out of the default install
 respects the supply-chain rule (fe-security). The worker loads from CDN, pinned to the lib version.
+
+## Charts (Recharts) — fintech data viz
+MEDA charts wrap Recharts with the theme colors (price-up green / price-down red / brand).
+Opt-in (ships as `meda-charts.tsx.template`): `pnpm add -E recharts` + rename to `meda-charts.tsx`.
+Three chart types, each taking `data: { label, value }[]`:
+- `AreaTrendChart` — balance / movements over time (the hero fintech chart). `trend="up"|"down"|"brand"`.
+- `BarVolumeChart` — volume per period (transactions/day, revenue/month).
+- `LineMetricChart` — a metric over time (price, conversion rate).
+```tsx
+import { AreaTrendChart } from "@/components/ui/meda-charts";
+const data = [{ label: "Lun", value: 1200 }, { label: "Mar", value: 1800 }, /* ... */];
+<AreaTrendChart data={data} trend="up" height={240} />
+```
+Ask the agent: *"add an area chart of the last 7 days of movements"*. Colors auto-follow dark/light
+because they read CSS tokens at runtime. Why opt-in: recharts is heavy; not every screen needs charts.
+
+## Use-case showcase (/showcase)
+The generated `/showcase` page shows REAL fintech screens (account dashboard, new transfer,
+transaction detail, login) — click a use-case card to see the actual screen built with MEDA UI.
+Use it as a reference for how to compose primitives into real business screens, not just isolated demos.

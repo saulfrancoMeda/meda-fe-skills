@@ -25,9 +25,9 @@ export function DropdownMenu({ trigger, children, align = "left", className }: D
 
   return (
     <div ref={ref} className="relative inline-block">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open}>
+      <span onClick={() => setOpen((o) => !o)} className="inline-flex cursor-pointer" aria-haspopup="menu" aria-expanded={open}>
         {trigger}
-      </button>
+      </span>
       {open && (
         <div role="menu"
           className={cn("meda-pop absolute z-20 mt-1 min-w-44 rounded-meda border border-border-default bg-surface p-1 shadow-lg",
