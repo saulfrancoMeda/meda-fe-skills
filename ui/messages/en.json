@@ -25,5 +25,20 @@
     "subtitle": "Built with the MEDA frontend standards: Next.js, TypeScript, Tailwind, and the MEDA UI library. Start by exploring the components, then build your features.",
     "showcase": "View component showcase",
     "browse": "Browse all components"
+  },
+  "home": {
+    "title": "Welcome to your MEDA app",
+    "subtitle": "Built with the MEDA frontend standards: Next.js, TypeScript, Tailwind and the MEDA UI library. Start by exploring the components, then build your features.",
+    "ctaShowcase": "View functionalities",
+    "ctaComponents": "Browse all components",
+    "develop": "Develop",
+    "developShort": "Build features with your AI agent.",
+    "developDetail": "Ask your agent to use meda-fe-component (MEDA-standard components) and meda-fe-endpoint (types + client + TanStack hook from OpenAPI). The skills guide the agent.",
+    "mock": "Mock",
+    "mockShort": "Endpoint not ready? Use MSW.",
+    "mockDetail": "MSW is set up in src/mocks/. Define handlers that simulate the real API to develop without waiting for the backend.",
+    "standards": "Standards",
+    "standardsShort": "Skills enforce quality by default.",
+    "standardsDetail": "Skills enforce SRP, security, the four UI states, accessibility and the Binance-style MEDA design. The agent follows them automatically."
   }
 }

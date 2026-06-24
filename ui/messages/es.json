@@ -25,5 +25,20 @@
     "subtitle": "Construido con los estándares frontend de MEDA: Next.js, TypeScript, Tailwind y la librería MEDA UI. Empieza explorando los componentes y luego construye tus features.",
     "showcase": "Ver showcase de componentes",
     "browse": "Ver todos los componentes"
+  },
+  "home": {
+    "title": "Bienvenido a tu app MEDA",
+    "subtitle": "Construido con los estándares frontend de MEDA: Next.js, TypeScript, Tailwind y la librería MEDA UI. Empieza explorando los componentes y luego construye tus features.",
+    "ctaShowcase": "Ver funcionalidades",
+    "ctaComponents": "Ver todos los componentes",
+    "develop": "Develop",
+    "developShort": "Construye features con tu agente de IA.",
+    "developDetail": "Pídele a tu agente que use meda-fe-component (componentes con estándares MEDA) y meda-fe-endpoint (tipos + cliente + hook de TanStack desde OpenAPI). Las skills guían al agente.",
+    "mock": "Mock",
+    "mockShort": "¿El endpoint no está listo? Usa MSW.",
+    "mockDetail": "MSW ya está configurado en src/mocks/. Define handlers que simulan la API real para desarrollar sin esperar al backend.",
+    "standards": "Standards",
+    "standardsShort": "Las skills imponen calidad por defecto.",
+    "standardsDetail": "Las skills imponen SRP, seguridad, los cuatro estados de UI, accesibilidad y el diseño MEDA estilo Binance. El agente las sigue automáticamente."
   }
 }

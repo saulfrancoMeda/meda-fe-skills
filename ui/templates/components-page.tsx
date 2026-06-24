@@ -8,7 +8,7 @@ import { COMPONENT_DOCS, type ComponentDoc, type Example } from "./component-exa
 
 // shadcn-style component explorer: list → click → detail panel (with motion) + multiple examples + code.
 export default function ComponentsPage() {
-  const [active, setActive] = React.useState<ComponentDoc | null>(null);
+  const [active, setActive] = React.useState<ComponentDoc | null>(COMPONENT_DOCS[0] ?? null);
   const groups = Array.from(new Set(COMPONENT_DOCS.map((c) => c.group)));
 
   return (

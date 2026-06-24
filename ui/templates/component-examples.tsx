@@ -30,6 +30,8 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { TransactionCard } from "@/components/ui/transaction-card";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { DetailModal } from "@/components/ui/detail-modal";
+import { FormRenderer, type FormSchema } from "@/components/ui/form-renderer";
+import { Sidebar } from "@/components/ui/sidebar";
 
 export interface Example { title: string; node: React.ReactNode; code: string; }
 export interface ComponentDoc { name: string; group: string; summary: string; importLine: string; examples: Example[]; }
@@ -98,6 +100,32 @@ function DetailModalDemo() {
     </DetailModal></>;
 }
 
+function FormRendererDemo() {
+  const schema: FormSchema = {
+    submitLabel: "Guardar",
+    fields: [
+      { name: "name", label: "Nombre", type: "text", required: true, full: true, placeholder: "Nombre completo" },
+      { name: "email", label: "Correo", type: "email", required: true },
+      { name: "role", label: "Rol", type: "select", options: [{ value: "op", label: "Operador" }, { value: "ad", label: "Administrador" }] },
+    ],
+  };
+  return <div className="w-full max-w-md"><FormRenderer schema={schema} onSubmit={() => {}} /></div>;
+}
+
+function SidebarExampleDemo() {
+  return (
+    <div className="h-64 w-full max-w-xs overflow-hidden rounded-control border border-border-default">
+      <Sidebar embedded collapsible={false} activeHref="/mov"
+        header={<span className="font-semibold text-fg">MEDÁ</span>}
+        groups={[{ title: "Menú", items: [
+          { label: "Movimientos", href: "/mov", icon: "▤", badge: 50 },
+          { label: "Usuarios", href: "/u", icon: "◍" },
+          { label: "Roles", href: "/r", icon: "◆", badge: "Nuevo" },
+        ] }]} />
+    </div>
+  );
+}
+
 export const COMPONENT_DOCS: ComponentDoc[] = [
   {
     name: "Button", group: "Actions", summary: "Botón con variantes y tamaños. La acción primaria de cualquier pantalla.",
@@ -136,6 +164,11 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
       { title: "Grupo de campos", node: <div className="w-72"><FieldGroup><Field><FieldLabel htmlFor="e3">Nombre</FieldLabel><Input id="e3" /></Field><Field><FieldLabel htmlFor="e4">Apellido</FieldLabel><Input id="e4" /></Field></FieldGroup></div>,
         code: '<FieldGroup>\n  <Field>\n    <FieldLabel htmlFor="nombre">Nombre</FieldLabel>\n    <Input id="nombre" />\n  </Field>\n  <Field>\n    <FieldLabel htmlFor="apellido">Apellido</FieldLabel>\n    <Input id="apellido" />\n  </Field>\n</FieldGroup>' },
     ],
+  },
+  {
+    name: "FormRenderer", group: "Forms", summary: "Renderiza un formulario validado desde un esquema JSON (config-driven). Para formularios dinámicos.",
+    importLine: 'import { FormRenderer, type FormSchema } from "@/components/ui/form-renderer";',
+    examples: [{ title: "Formulario desde JSON", node: <FormRendererDemo />, code: 'const schema: FormSchema = {\n  submitLabel: "Guardar",\n  fields: [\n    { name: "email", label: "Correo", type: "email", required: true },\n    { name: "role", label: "Rol", type: "select", options: [...] },\n  ],\n};\n<FormRenderer schema={schema} onSubmit={(v) => api.save(v)} />' }],
   },
   {
     name: "InputOTP", group: "Forms", summary: "Código de un solo uso (2FA/SMS). Auto-avance, pegado y backspace.",
@@ -298,6 +331,11 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
     importLine: 'import { Accordion } from "@/components/ui/accordion";',
     examples: [{ title: "FAQ", node: <div className="w-full max-w-md"><Accordion items={[{ id: "1", title: "¿Cuánto tarda una transferencia?", content: "Las SPEI llegan en minutos." }, { id: "2", title: "¿Hay comisión?", content: "No para transferencias SPEI." }]} /></div>,
       code: '<Accordion items={[\n  { id: "1", title: "¿Cuánto tarda?", content: "Minutos." },\n]} />' }],
+  },
+  {
+    name: "Sidebar", group: "Layout", summary: "Navegación lateral personalizable: grupos, iconos, badges, colapsable, header/footer. Para back-office.",
+    importLine: 'import { Sidebar } from "@/components/ui/sidebar";',
+    examples: [{ title: "Sidebar con grupos y badges", node: <SidebarExampleDemo />, code: '<Sidebar activeHref="/mov" header={<Logo />} footer={<UserMenu />}\n  groups={[{ title: "Menú", items: [\n    { label: "Movimientos", href: "/mov", icon: <Icon/>, badge: 50 },\n    { label: "Roles", href: "/r", badge: "Nuevo" },\n  ] }]} />\n\n// O el layout completo:\n<AppShell groups={groups} activeHref="/mov">{children}</AppShell>' }],
   },
   {
     name: "Card", group: "Layout", summary: "Contenedor con borde y padding.",

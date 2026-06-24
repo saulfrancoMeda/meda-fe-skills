@@ -21,3 +21,13 @@ export function formatDate(iso: string): string {
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" });
 }
+
+/** Format MXN explicitly with the "MXN" suffix as MEDA shows it: "$1,234.50 MXN". */
+export function formatMXN(amount: number): string {
+  return `${MXN.format(amount)} MXN`;
+}
+
+/** Abbreviate large amounts: 1850861 -> "$1.85M", 69000 -> "$69.0K". For stat chips/KPIs. */
+export function formatCompact(amount: number): string {
+  return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", notation: "compact", maximumFractionDigits: 2 }).format(amount);
+}

@@ -1,3 +1,9 @@
 *.log
 .DS_Store
 node_modules/
+.pnpm-store/
+node_modules/
+.next/
+dist/
+*.log
+.DS_Store

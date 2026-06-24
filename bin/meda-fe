@@ -602,7 +602,8 @@ UTILITY:
   meda-fe install               Install skills only (no scan/setup)
   meda-fe verify                Verify skills are installed
   meda-fe list                  List available skills
-  meda-fe version | help
+  meda-fe --version, -v         Print version
+  meda-fe --help, -h            Show this help
 
 TYPICAL USE:
   # New project (you know it's new):

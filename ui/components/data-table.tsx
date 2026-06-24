@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { cn } from "@/lib/cn";
+import { Columns3, Download, Maximize2, Minimize2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Table2 } from "lucide-react";
 
 export interface Column<T> {
   key: keyof T & string;
@@ -39,12 +40,15 @@ interface DataTableProps<T> {
   /** Export handler (CSV). If omitted, a default CSV export of visible columns runs. */
   onExport?: () => void;
   exportable?: boolean;
+  /** Max height of the table body for INTERNAL scroll (header stays sticky). Default '32rem'.
+   *  Pass `false` to let the table grow and the page scroll instead. */
+  maxHeight?: string | false;
 }
 
 export function DataTable<T>({
   columns, data, rowKey, title, count, stats, searchFields, actions, onRowClick,
   loading, emptyMessage = "Sin registros", paginate = true, pageSizeOptions = [10, 25, 50, 100],
-  onExport, exportable = true,
+  onExport, exportable = true, maxHeight = "32rem",
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = React.useState<string | null>(null);
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
@@ -111,7 +115,7 @@ export function DataTable<T>({
       <div className="mb-3 flex flex-wrap items-center gap-3">
         {(title || count != null) && (
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-meda bg-brand text-brand-foreground">▦</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-meda bg-brand text-brand-foreground"><Table2 className="h-5 w-5" /></span>
             <div className="leading-tight">
               <p className="text-lg font-semibold text-fg">{count ?? data.length}</p>
               {title && <p className="text-[11px] uppercase tracking-wide text-fg-tertiary">{title}</p>}
@@ -130,14 +134,14 @@ export function DataTable<T>({
         {searchFields?.map((f, i) => (
           <input key={i} value={queries[i] ?? ""} placeholder={f.placeholder}
             onChange={(e) => setQueries((q) => { const n = q.slice(); n[i] = e.target.value; return n; })}
-            className="h-9 w-44 rounded-control border border-border-default bg-surface px-3 text-sm text-fg outline-none focus:border-brand" />
+            className="h-9 w-44 rounded-control border border-border-default bg-surface px-3 text-sm text-fg outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/40" />
         ))}
         <div className="ml-auto flex items-center gap-2">
           {actions}
           {/* Column visibility */}
           <div className="relative">
             <button onClick={() => setColsOpen((o) => !o)} aria-label="Personalizar columnas"
-              className="flex h-9 w-9 items-center justify-center rounded-control border border-border-default text-fg-secondary hover:bg-muted">▦</button>
+              className="flex h-9 w-9 items-center justify-center rounded-control border border-border-default text-fg-secondary hover:bg-muted hover:text-fg transition-colors"><Columns3 className="h-4 w-4" /></button>
             {colsOpen && (
               <div className="meda-pop absolute right-0 z-20 mt-1 w-52 rounded-meda border border-border-default bg-surface p-3 shadow-lg">
                 <div className="mb-2 flex items-center justify-between">
@@ -157,13 +161,13 @@ export function DataTable<T>({
           </div>
           {exportable && (
             <button onClick={onExport ?? defaultExport}
-              className="flex h-9 items-center gap-1.5 rounded-control border border-border-default px-3 text-sm text-fg hover:bg-muted">
-              <span>⭳</span> Exportar
+              className="flex h-9 items-center gap-1.5 rounded-control border border-border-default px-3 text-sm text-fg transition-colors hover:bg-muted hover:text-fg">
+              <Download className="h-4 w-4" /> Exportar
             </button>
           )}
           <button onClick={() => setZen((z) => !z)} aria-label={zen ? "Salir de modo zen" : "Modo zen"}
-            className="flex h-9 w-9 items-center justify-center rounded-control border border-border-default text-fg-secondary hover:bg-muted">
-            {zen ? "⤡" : "⤢"}
+            className="flex h-9 w-9 items-center justify-center rounded-control border border-border-default text-fg-secondary transition-colors hover:bg-muted hover:text-fg">
+            {zen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -180,7 +184,8 @@ export function DataTable<T>({
       </div>
 
       {/* Table */}
-      <div className="w-full overflow-auto rounded-meda border border-border-default">
+      <div className="w-full overflow-auto rounded-meda border border-border-default"
+        style={maxHeight === false ? undefined : { maxHeight }}>
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-table-head">
             <tr>
@@ -191,7 +196,7 @@ export function DataTable<T>({
                     c.sortable && "cursor-pointer select-none")}
                   onClick={() => c.sortable && toggleSort(c.key)}>
                   {c.header}
-                  {sortKey === c.key && <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>}
+                  {sortKey === c.key && (sortDir === "asc" ? <ChevronUp className="ml-1 inline h-3.5 w-3.5" /> : <ChevronDown className="ml-1 inline h-3.5 w-3.5" />)}
                 </th>
               ))}
             </tr>
@@ -235,9 +240,9 @@ export function DataTable<T>({
             </div>
             <div className="flex gap-2">
               <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}
-                className="rounded-control border border-border-default px-3 py-1.5 text-sm text-fg disabled:opacity-40 hover:bg-muted">‹ Anterior</button>
+                className="flex items-center gap-1 rounded-control border border-border-default px-3 py-1.5 text-sm text-fg disabled:opacity-40 hover:bg-muted"><ChevronLeft className="h-4 w-4" /> Anterior</button>
               <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
-                className="rounded-control border border-border-default px-3 py-1.5 text-sm text-fg disabled:opacity-40 hover:bg-muted">Siguiente ›</button>
+                className="flex items-center gap-1 rounded-control border border-border-default px-3 py-1.5 text-sm text-fg disabled:opacity-40 hover:bg-muted">Siguiente <ChevronRight className="h-4 w-4" /></button>
             </div>
           </div>
         </div>

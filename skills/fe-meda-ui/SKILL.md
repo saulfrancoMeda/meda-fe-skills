@@ -299,3 +299,58 @@ import { DetailModal } from "@/components/ui/detail-modal";
 
 Rule for list/admin screens: AppShell (layout) + DataTable (the list, with its toolbar) + DetailModal
 (row detail) + Dialog (create/edit form). That combination IS the MEDA admin look — don't reinvent it.
+
+## Money masking & formatting (use these — don't format by hand)
+In `lib/utils/`:
+- `maskAmount("1234567.5")` → `"1,234,567.5"` (live thousands mask for inputs; AmountInput uses it).
+- `parseAmount("1,234.56")` → `1234.56` (masked string → number).
+- `formatMXN(1234.5)` → `"$1,234.50 MXN"` (MEDA's display format with suffix).
+- `formatCompact(1850861)` → `"$1.85M"` (for stat chips / KPIs).
+- `maskCard`, `maskAccount`, `maskEmail`, `maskPhone` for PII display (never log raw PII — fe-security).
+Always render amounts via these so grouping/decimals/currency are consistent across the app.
+
+## FormRenderer — config-driven forms from a JSON schema
+Define forms as DATA, not hand-written JSX. Renders labels, controls, validation and submit from a
+schema. Use for dynamic/admin forms and anything that should be data-driven.
+```tsx
+import { FormRenderer, type FormSchema } from "@/components/ui/form-renderer";
+const schema: FormSchema = {
+  submitLabel: "Crear transferencia", columns: 2,
+  fields: [
+    { name: "beneficiary", label: "Beneficiario", type: "text", required: true, full: true },
+    { name: "clabe", label: "CLABE", type: "text", required: true, pattern: "^\\d{18}$", description: "18 dígitos" },
+    { name: "amount", label: "Monto", type: "amount", required: true, min: 1 },
+    { name: "bank", label: "Banco", type: "combobox", options: [{ value: "stp", label: "STP" }] },
+  ],
+};
+<FormRenderer schema={schema} onSubmit={(values) => api.save(values)} />
+```
+Field types: text, email, password, number, amount, select, combobox, textarea, switch, checkbox.
+Built-in validation: required, email, pattern, min (amount), plus a per-field `validate(value, values)`.
+Prefer FormRenderer when fields come from config/an API; use hand-written Field + RHF+Zod when the form
+has complex custom interactions (fe-forms-validation).
+
+## DataTable: internal scroll by default
+The table body scrolls internally (header stays sticky), so a long table doesn't push the page.
+Default `maxHeight="32rem"`. Pass `maxHeight={false}` only if the user explicitly wants the page to grow.
+
+## Sidebar — customizable navigation (standalone or via AppShell)
+A configurable sidebar: groups with optional titles, items with icons + badges, collapsible to an
+icon rail, header/footer slots, and an `embedded` mode for non-overlay layouts.
+```tsx
+import { Sidebar } from "@/components/ui/sidebar";
+<Sidebar activeHref="/movimientos" header={<Logo />} footer={<UserMenu />}
+  groups={[
+    { title: "Operación", items: [
+      { label: "Movimientos", href: "/movimientos", icon: <Receipt className="h-4 w-4" />, badge: 50 },
+      { label: "Transferencias", href: "/transferencias", icon: <ArrowLeftRight className="h-4 w-4" /> },
+    ] },
+    { title: "Administración", items: [{ label: "Roles", href: "/roles", badge: "Nuevo" }] },
+  ]} />
+```
+For a full layout, use `AppShell` (it wraps Sidebar + top bar + content):
+```tsx
+<AppShell groups={groups} activeHref="/movimientos" sidebarFooter={<UserMenu />}>{children}</AppShell>
+```
+Props: `collapsible` (default true), `defaultCollapsed`, `embedded` (render in normal flow, e.g. a demo),
+items support `badge` (count or text like "Nuevo"). Customize header/footer freely.

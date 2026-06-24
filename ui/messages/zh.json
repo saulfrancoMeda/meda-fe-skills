@@ -25,5 +25,20 @@
     "subtitle": "基于 MEDA 前端标准构建：Next.js、TypeScript、Tailwind 和 MEDA UI 组件库。先浏览组件，然后构建您的功能。",
     "showcase": "查看组件展示",
     "browse": "浏览所有组件"
+  },
+  "home": {
+    "title": "欢迎使用您的 MEDA 应用",
+    "subtitle": "基于 MEDA 前端标准构建：Next.js、TypeScript、Tailwind 和 MEDA UI 库。先浏览组件，再构建你的功能。",
+    "ctaShowcase": "查看功能",
+    "ctaComponents": "浏览所有组件",
+    "develop": "开发",
+    "developShort": "用 AI 代理构建功能。",
+    "developDetail": "让你的代理使用 meda-fe-component（符合 MEDA 标准的组件）和 meda-fe-endpoint（从 OpenAPI 生成类型、客户端和 TanStack hook）。",
+    "mock": "模拟",
+    "mockShort": "接口未就绪？使用 MSW。",
+    "mockDetail": "src/mocks/ 中已配置 MSW。定义处理程序来模拟真实 API，无需等待后端。",
+    "standards": "标准",
+    "standardsShort": "技能默认强制执行质量。",
+    "standardsDetail": "技能强制执行 SRP、安全性、四种 UI 状态、无障碍和 Binance 风格的 MEDA 设计。代理会自动遵循。"
   }
 }
