@@ -13,3 +13,4 @@ export { Tabs } from "./tabs";
 export { Select } from "./select";
 export { ToastProvider, useToast } from "./toast";
 export { PageTransition } from "./motion/page-transition";
+export { ThemeToggle } from "./theme-toggle";

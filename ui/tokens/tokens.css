@@ -1,91 +1,68 @@
 /**
- * MEDA UI — Design Tokens
- * Derived from MEDA's MUI theme (Binance-style). Single source of truth for colors, radius, type.
- * Used as CSS variables so light/dark work via the `.dark` class.
+ * MEDA UI — Design Tokens (Tailwind v4, CSS-first)
+ * Import AFTER `@import "tailwindcss"` in your globals.css.
+ * Generates utility classes: bg-brand, text-fg, border-default, bg-surface, rounded-meda, etc.
+ * Dark mode via the `.dark` class on <html> (toggle with JS).
  */
 
-:root {
-  /* Brand (Binance yellow) */
-  --meda-brand: #FCD535;
-  --meda-brand-light: #FDDD66;
-  --meda-brand-dark: #C99400;        /* hover gold */
-  --meda-brand-foreground: #0A0F14;  /* text on brand */
+/* Enable class-based dark mode (v4 needs this line; darkMode:'class' config is gone) */
+@custom-variant dark (&:where(.dark, .dark *));
 
-  /* Surfaces (light) */
-  --meda-bg: #FCFCFC;
-  --meda-surface: #FFFFFF;           /* paper */
-  --meda-sidebar: #F5F6FA;
-  --meda-muted: #F5F6FA;
+/* Map design tokens to utility classes */
+@theme {
+  --color-brand: #FCD535;
+  --color-brand-light: #FDDD66;
+  --color-brand-dark: #C99400;
+  --color-brand-foreground: #0A0F14;
 
-  /* Text (light) */
-  --meda-fg: #0A0F14;                /* primary text / near-black */
-  --meda-fg-secondary: #6b7280;
-  --meda-fg-tertiary: #545454;
-  --meda-fg-disabled: #9ca3af;
+  --color-bg: #FCFCFC;
+  --color-surface: #FFFFFF;
+  --color-muted: #F5F6FA;
 
-  /* Borders */
-  --meda-border: #E0E4EC;
-  --meda-border-btn: #B7BDC6;
-  --meda-divider: rgba(0,0,0,0.08);
+  --color-fg: #0A0F14;
+  --color-fg-secondary: #6b7280;
+  --color-fg-tertiary: #545454;
 
-  /* Semantic */
-  --meda-success: #10b981;
-  --meda-success-light: #34d399;
-  --meda-success-dark: #059669;
-  --meda-error: #ef4444;
-  --meda-error-light: #f87171;
-  --meda-error-dark: #dc2626;
-  --meda-warning: #f59e0b;
-  --meda-warning-light: #fbbf24;
-  --meda-warning-dark: #d97706;
-  --meda-info: #3b82f6;
-  --meda-info-light: #60a5fa;
-  --meda-info-dark: #2563eb;
-  --meda-danger-text: #D93025;
+  --color-border-default: #E0E4EC;
+  --color-border-strong: #B7BDC6;
 
-  /* Sidebar (light) */
-  --meda-sidebar-text: #5F6367;
-  --meda-sidebar-selected: #E6EBF3;
-  --meda-sidebar-selected-text: #0A0F14;
-  --meda-sidebar-hover: #FCD535;
-  --meda-sidebar-hover-text: #0A0F14;
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-error: #ef4444;
+  --color-error-dark: #dc2626;
+  --color-warning: #f59e0b;
+  --color-warning-dark: #d97706;
+  --color-info: #3b82f6;
+  --color-info-dark: #2563eb;
 
-  /* Table (light) */
-  --meda-table-head-bg: #F5F6FA;
-  --meda-table-title: #0A0F14;
-  --meda-table-subtitle: #929AA5;
-  --meda-table-border: #EEE;
+  --color-table-head: #F5F6FA;
+  --color-table-title: #0A0F14;
+  --color-table-subtitle: #929AA5;
 
-  /* Shape & type */
-  --meda-radius: 8px;
-  --meda-font: "Binance Plex", system-ui, -apple-system, sans-serif;
+  --radius-meda: 8px;
+  --font-sans: "Binance Plex", system-ui, -apple-system, sans-serif;
 }
 
+/* Dark mode overrides — same token names, dark values */
 .dark {
-  /* Surfaces (dark) */
-  --meda-bg: #141518;
-  --meda-surface: #181a20;           /* paper */
-  --meda-sidebar: #0a0f14;
-  --meda-muted: #2B3139;
+  --color-bg: #0b0e11;
+  --color-surface: #181a20;
+  --color-muted: #1e2329;
 
-  /* Text (dark) */
-  --meda-fg: #f9fafb;
-  --meda-fg-secondary: #d1d5db;
-  --meda-fg-tertiary: #f9fafb;
-  --meda-fg-disabled: #6b7280;
+  --color-fg: #f9fafb;
+  --color-fg-secondary: #a1a7b3;
+  --color-fg-tertiary: #848e9c;
 
-  /* Borders */
-  --meda-border: rgba(255,255,255,0.12);
-  --meda-divider: rgba(255,255,255,0.12);
+  --color-border-default: #2b3139;
+  --color-border-strong: #474d57;
 
-  /* Sidebar (dark) */
-  --meda-sidebar-text: #929AA5;
-  --meda-sidebar-selected: rgba(230,235,243,0.20);
-  --meda-sidebar-selected-text: #FFFFFF;
-  --meda-sidebar-hover-text: #0A0F14;
+  --color-table-head: #1e2329;
+  --color-table-title: #f9fafb;
+  --color-table-subtitle: #848e9c;
+}
 
-  /* Table (dark) */
-  --meda-table-head-bg: #2B3139;
-  --meda-table-title: #FFFFFF;
-  --meda-table-border: #444;
+/* Base: apply bg + text + default border color so the page and components look right */
+@layer base {
+  body { background-color: var(--color-bg); color: var(--color-fg); }
+  * { border-color: var(--color-border-default); }
 }

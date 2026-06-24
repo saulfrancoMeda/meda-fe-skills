@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -7,6 +8,8 @@ import { FormField } from "@/components/ui/form-field";
 import { TransactionCard } from "@/components/ui/transaction-card";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { Avatar } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ToastProvider, useToast } from "@/components/ui/toast";
 import { MedaLogo } from "@/features/auth/meda-logo";
 
 interface Tx { orderNo: string; merchant: string; amount: number; status: string; date: string; }
@@ -25,58 +28,85 @@ const cols: Column<Tx>[] = [
   { key: "date", header: "Date", sortable: true },
 ];
 
+function ToastDemo() {
+  const { show } = useToast();
+  return (
+    <div className="flex flex-wrap gap-3">
+      <Button variant="primary" onClick={() => show("success", "Transaction approved")}>Success toast</Button>
+      <Button variant="danger" onClick={() => show("error", "Payment failed")}>Error toast</Button>
+      <Button variant="outline" onClick={() => show("info", "Processing your request")}>Info toast</Button>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-10 meda-fade-in">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-fg-secondary">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
 export default function Home() {
   const [name, setName] = useState("");
   return (
-    <main className="min-h-screen bg-bg p-8">
-      <div className="mx-auto max-w-5xl meda-page-enter">
-        <header className="mb-8 flex items-center justify-between">
-          <MedaLogo className="h-8 text-fg" />
-          <div className="flex items-center gap-3">
-            <Badge variant="brand">MEDA UI</Badge>
-            <Avatar name="Saul Renteria" />
-          </div>
-        </header>
+    <ToastProvider>
+      <main className="min-h-screen bg-bg p-8">
+        <div className="mx-auto max-w-5xl meda-page-enter">
+          <header className="mb-10 flex items-center justify-between">
+            <MedaLogo className="h-8 text-fg" />
+            <div className="flex items-center gap-3">
+              <Link href="/components" className="text-sm text-fg-secondary hover:text-fg">All components →</Link>
+              <Badge variant="brand">MEDA UI</Badge>
+              <ThemeToggle />
+              <Avatar name="Saul Renteria" />
+            </div>
+          </header>
 
-        <h1 className="mb-2 text-2xl font-semibold text-fg">Component showcase</h1>
-        <p className="mb-8 text-sm text-fg-secondary">Everything from the MEDA UI library, Binance-style.</p>
+          <h1 className="mb-2 text-2xl font-semibold text-fg">Component showcase</h1>
+          <p className="mb-10 text-sm text-fg-secondary">Everything from the MEDA UI library, Binance-style. Toggle dark/light top-right.</p>
 
-        <section className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase text-fg-secondary">Buttons</h2>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="primary">Primary</Button>
-            <Button variant="secondary">Secondary</Button>
-            <Button variant="outline">Outline</Button>
-            <Button variant="link">Link</Button>
-            <Button variant="danger">Danger</Button>
-          </div>
-        </section>
+          <Section title="Buttons">
+            <div className="flex flex-wrap gap-3">
+              <Button variant="primary">Primary</Button>
+              <Button variant="secondary">Secondary</Button>
+              <Button variant="outline">Outline</Button>
+              <Button variant="link">Link</Button>
+              <Button variant="danger">Danger</Button>
+            </div>
+          </Section>
 
-        <section className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase text-fg-secondary">Transactions</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {rows.map((r) => <TransactionCard key={r.orderNo} {...(r as any)} />)}
-          </div>
-        </section>
+          <Section title="Toasts / notifications">
+            <ToastDemo />
+          </Section>
 
-        <section className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase text-fg-secondary">Data table (sort, columns, density)</h2>
-          <DataTable columns={cols} data={rows} rowKey={(r) => r.orderNo} />
-        </section>
+          <Section title="Transactions">
+            <div className="grid gap-4 sm:grid-cols-3">
+              {rows.map((r) => <TransactionCard key={r.orderNo} {...(r as any)} />)}
+            </div>
+          </Section>
 
-        <section className="grid gap-6 sm:grid-cols-2">
-          <Card>
-            <CardHeader><CardTitle>Card</CardTitle><CardDescription>A simple card</CardDescription></CardHeader>
-            <CardContent><p className="text-sm text-fg">Content goes here.</p></CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle>Form field</CardTitle></CardHeader>
-            <CardContent>
-              <FormField label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Type..." hint="With accessible label + hint" />
-            </CardContent>
-          </Card>
-        </section>
-      </div>
-    </main>
+          <Section title="Data table (sort, columns, density)">
+            <DataTable columns={cols} data={rows} rowKey={(r) => r.orderNo} />
+          </Section>
+
+          <Section title="Card & form">
+            <div className="grid gap-6 sm:grid-cols-2">
+              <Card>
+                <CardHeader><CardTitle>Card</CardTitle><CardDescription>A simple card</CardDescription></CardHeader>
+                <CardContent><p className="text-sm text-fg">Content goes here.</p></CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Form field</CardTitle></CardHeader>
+                <CardContent>
+                  <FormField label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Type..." hint="With accessible label + hint" />
+                </CardContent>
+              </Card>
+            </div>
+          </Section>
+        </div>
+      </main>
+    </ToastProvider>
   );
 }

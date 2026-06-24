@@ -64,7 +64,7 @@ export function DataTable<T>({ columns, data, rowKey, emptyMessage = "No data" }
         </div>
         <details className="relative">
           <summary className="cursor-pointer rounded border border-border-default px-2 py-1 text-xs text-fg list-none">Columns</summary>
-          <div className="absolute right-0 z-10 mt-1 w-44 rounded-meda border border-border-default bg-surface p-2 shadow-lg">
+          <div className="meda-pop absolute right-0 z-10 mt-1 w-44 rounded-meda border border-border-default bg-surface p-2 shadow-lg">
             {columns.map((c) => (
               <label key={c.key} className="flex items-center gap-2 py-1 text-sm text-fg">
                 <input type="checkbox" checked={!hidden.has(c.key)} onChange={() => toggleColumn(c.key)} />
