@@ -1,177 +1,233 @@
 "use client";
-import { useState } from "react";
+import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { FormField } from "@/components/ui/form-field";
-import { TransactionCard } from "@/components/ui/transaction-card";
-import { StatusPill } from "@/components/ui/status-pill";
-import { AmountInput } from "@/components/ui/amount-input";
-import { CopyField } from "@/components/ui/copy-field";
-import { Combobox } from "@/components/ui/combobox";
-import { DatePicker } from "@/components/ui/date-picker";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable, type Column, type DataTableStat } from "@/components/ui/data-table";
+import { DetailModal } from "@/components/ui/detail-modal";
+import { Dialog } from "@/components/ui/dialog";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Avatar } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { ToastProvider, useToast } from "@/components/ui/toast";
-import { TransferForm } from "@/features/transfer/transfer-form";
-import { MedaLogo } from "@/features/auth/meda-logo";
 
-// Real fintech use-cases. Click a card → see the actual screen built with MEDA UI.
-type UseCase = "dashboard" | "transfer" | "txdetail" | "login";
+// Production-grade back-office screens built entirely from MEDA UI (DataTable + DetailModal + Dialog).
+// Mirrors the real MEDA admin: rich table toolbar (stats, search, columns, export, zen), pagination.
 
-const CASES: { id: UseCase; title: string; desc: string }[] = [
-  { id: "dashboard", title: "Dashboard de cuenta", desc: "Balance, movimientos y KPIs — la pantalla principal de un usuario." },
-  { id: "transfer", title: "Nueva transferencia", desc: "Formulario con validación CLABE/monto + confirmación." },
-  { id: "txdetail", title: "Detalle de transacción", desc: "Estado, monto, comprobante y datos del movimiento." },
-  { id: "login", title: "Inicio de sesión", desc: "Pantalla de acceso con la identidad MEDA." },
-];
+type Screen = "users" | "movements" | "transfers" | "newTransfer";
 
 export default function ShowcasePage() {
-  const [active, setActive] = useState<UseCase | null>(null);
-  return (
-    <ToastProvider>
-      <div className="min-h-screen bg-bg">
-        <header className="flex items-center justify-between border-b border-border-default px-6 py-4">
-          <MedaLogo />
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-sm text-fg-secondary hover:text-fg">Home</Link>
-            <Link href="/components" className="text-sm text-fg-secondary hover:text-fg">Componentes</Link>
-            <ThemeToggle />
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-6xl px-6 py-10">
-          <h1 className="text-2xl font-semibold text-fg">Casos de uso</h1>
-          <p className="mt-1 text-fg-secondary">Pantallas reales de un producto fintech. Haz click en una para verla construida con MEDA UI.</p>
-
-          {!active ? (
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {CASES.map((c) => (
-                <button key={c.id} onClick={() => setActive(c.id)}
-                  className="rounded-meda border border-border-default bg-surface p-5 text-left transition-colors hover:border-brand">
-                  <h3 className="font-semibold text-fg">{c.title}</h3>
-                  <p className="mt-1 text-sm text-fg-secondary">{c.desc}</p>
-                  <span className="mt-3 inline-block text-sm font-medium text-brand-dark">Ver pantalla →</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-6">
-              <Button variant="outline" size="sm" onClick={() => setActive(null)}>← Volver a casos de uso</Button>
-              <div className="mt-4">
-                {active === "dashboard" && <DashboardCase />}
-                {active === "transfer" && <TransferCase />}
-                {active === "txdetail" && <TxDetailCase />}
-                {active === "login" && <LoginCase />}
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </ToastProvider>
-  );
-}
-
-// ---- Use-case 1: Dashboard ----
-function DashboardCase() {
-  const txs = [
-    { orderNo: "MX-9001", merchant: "Spotify", amount: -149, status: "SUCCESS", date: "2026-06-22" },
-    { orderNo: "MX-9002", merchant: "Depósito SPEI", amount: 5000, status: "SUCCESS", date: "2026-06-21" },
-    { orderNo: "MX-9003", merchant: "Amazon", amount: -899, status: "PROCESSING", date: "2026-06-20" },
+  const [screen, setScreen] = React.useState<Screen>("movements");
+  const nav: { id: Screen; label: string }[] = [
+    { id: "users", label: "Usuarios" },
+    { id: "movements", label: "Movimientos" },
+    { id: "transfers", label: "Transferencias" },
   ];
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardContent className="p-5">
-          <p className="text-sm text-fg-secondary">Balance total</p>
-          <p className="mt-1 text-2xl font-semibold text-fg">$24,580.00</p>
-          <p className="mt-1 text-sm text-price-up">+2.4% este mes</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-5">
-          <p className="text-sm text-fg-secondary">Ingresos</p>
-          <p className="mt-1 text-2xl font-semibold text-price-up">$8,200.00</p>
-          <p className="mt-1 text-sm text-fg-tertiary">12 movimientos</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-5">
-          <p className="text-sm text-fg-secondary">Egresos</p>
-          <p className="mt-1 text-2xl font-semibold text-price-down">$3,620.00</p>
-          <p className="mt-1 text-sm text-fg-tertiary">28 movimientos</p>
-        </CardContent></Card>
-      </div>
-      <Card><CardContent className="p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-fg">Movimientos (últimos 7 días)</h3>
-          <Badge variant="brand">Demo</Badge>
-        </div>
-        <div className="mt-4 rounded-meda border border-dashed border-border-default p-8 text-center text-sm text-fg-secondary">
-          Aquí va la gráfica de área (AreaTrendChart) — activa recharts para verla.<br />
-          <code className="text-xs">pnpm add -E recharts</code> + renombra meda-charts.tsx.template
-        </div>
-      </CardContent></Card>
-      <div>
-        <h3 className="mb-3 font-semibold text-fg">Transacciones recientes</h3>
-        <div className="space-y-2">
-          {txs.map((t) => <TransactionCard key={t.orderNo} orderNo={t.orderNo} merchant={t.merchant} amount={t.amount} date={t.date} status={t.status as never} />)}
-        </div>
-      </div>
+    <div className="min-h-screen bg-bg">
+      <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border-default bg-bg/90 px-6 backdrop-blur">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-fg"><span className="text-brand text-xl">◆</span> MEDÁ</Link>
+        <nav className="flex items-center gap-1">
+          {nav.map((n) => (
+            <button key={n.id} onClick={() => setScreen(n.id)}
+              className={`rounded-control px-3 py-1.5 text-sm transition-colors ${screen === n.id || (screen === "newTransfer" && n.id === "transfers") ? "bg-brand text-brand-foreground font-medium" : "text-fg-secondary hover:bg-muted"}`}>
+              {n.label}
+            </button>
+          ))}
+        </nav>
+        <ThemeToggle />
+      </header>
+
+      <main className="mx-auto max-w-7xl p-6 lg:p-8">
+        {screen === "users" && <UsersScreen />}
+        {screen === "movements" && <MovementsScreen />}
+        {screen === "transfers" && <TransfersScreen onNew={() => setScreen("newTransfer")} />}
+        {screen === "newTransfer" && <NewTransferScreen onBack={() => setScreen("transfers")} />}
+      </main>
     </div>
   );
 }
 
-// ---- Use-case 2: Transfer ----
-function TransferCase() {
+// ---------- Users ----------
+interface User { id: string; name: string; email: string; role: string; status: string; created: string; }
+const USERS: User[] = [
+  { id: "1", name: "Ana García", email: "ana.garcia@meda.com.mx", role: "Administrador", status: "Activo", created: "15 ene 2026" },
+  { id: "2", name: "Carlos López", email: "carlos.lopez@meda.com.mx", role: "Operador", status: "Activo", created: "3 feb 2026" },
+  { id: "3", name: "María Torres", email: "maria.torres@meda.com.mx", role: "Consulta", status: "Inactivo", created: "10 mar 2026" },
+];
+
+function UsersScreen() {
+  const [addOpen, setAddOpen] = React.useState(false);
+  const cols: Column<User>[] = [
+    { key: "name", header: "Usuario", render: (u) => (
+      <div className="flex items-center gap-3">
+        <Avatar name={u.name} size="sm" />
+        <div><p className="font-medium text-fg">{u.name}</p><p className="text-xs text-fg-secondary">{u.email}</p></div>
+      </div>
+    ) },
+    { key: "role", header: "Rol", render: (u) => <Badge variant={u.role === "Administrador" ? "brand" : u.role === "Operador" ? "info" : "default"}>{u.role}</Badge> },
+    { key: "status", header: "Estado", render: (u) => (
+      <span className={`inline-flex items-center gap-1.5 text-sm ${u.status === "Activo" ? "text-success" : "text-fg-tertiary"}`}>
+        <span className={`h-2 w-2 rounded-full ${u.status === "Activo" ? "bg-success" : "bg-border-strong"}`} />{u.status}
+      </span>
+    ) },
+    { key: "created", header: "Alta", align: "right" },
+    { key: "id", header: "Acciones", align: "right", render: () => (
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="outline">Editar</Button>
+        <Button size="sm" variant="danger">Eliminar</Button>
+      </div>
+    ) },
+  ];
   return (
-    <Card className="max-w-lg"><CardContent className="p-6">
-      <h3 className="mb-4 font-semibold text-fg">Nueva transferencia</h3>
-      <TransferForm />
-    </CardContent></Card>
+    <>
+      <h1 className="mb-1 text-2xl font-semibold text-fg">Usuarios</h1>
+      <p className="mb-6 text-fg-secondary">Alta, edición, baja y asignación de roles.</p>
+      <DataTable
+        title="USUARIOS" count={USERS.length} data={USERS} columns={cols} rowKey={(u) => u.id}
+        searchFields={[{ placeholder: "Buscar usuario…", keys: ["name", "email"] }]}
+        actions={<Button onClick={() => setAddOpen(true)}>+ Nuevo usuario</Button>}
+      />
+      <Dialog open={addOpen} onClose={() => setAddOpen(false)} title="Agregar usuario">
+        <div className="space-y-4">
+          <Field><FieldLabel htmlFor="ue">Email</FieldLabel><Input id="ue" type="email" placeholder="usuario@meda.com.mx" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field><FieldLabel htmlFor="un">Nombre</FieldLabel><Input id="un" /></Field>
+            <Field><FieldLabel htmlFor="ua">Apellido</FieldLabel><Input id="ua" /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field><FieldLabel htmlFor="us">Estado</FieldLabel><Select id="us" options={[{ value: "a", label: "Activo" }, { value: "i", label: "Inactivo" }]} /></Field>
+            <Field><FieldLabel htmlFor="ur">Rol</FieldLabel><Select id="ur" options={[{ value: "c", label: "Consulta" }, { value: "o", label: "Operador" }, { value: "ad", label: "Administrador" }]} /></Field>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setAddOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setAddOpen(false)}>Guardar</Button>
+          </div>
+        </div>
+      </Dialog>
+    </>
   );
 }
 
-// ---- Use-case 3: Transaction detail ----
-function TxDetailCase() {
-  const { show } = useToast();
-  const [confirm, setConfirm] = useState(false);
+// ---------- Movements ----------
+interface Mov { id: string; trace: string; date: string; medaId: string; type: string; network: string; amount: number; status: string; }
+const MOVS: Mov[] = Array.from({ length: 23 }).map((_, i) => ({
+  id: `${(Math.random() * 1e8 | 0).toString(16)}-c8a-4674`,
+  trace: `${(Math.random() * 1e15 | 0).toString(16)}`,
+  date: "24/06/2026",
+  medaId: ["15072", "132914", "14475", "88011"][i % 4],
+  type: i % 3 === 0 ? "Crédito" : "Débito",
+  network: i % 2 === 0 ? "Externa" : "Interna",
+  amount: Math.round(Math.random() * 12000000) / 100,
+  status: i % 3 === 0 ? "Completado" : "En proceso",
+}));
+
+function MovementsScreen() {
+  const [detail, setDetail] = React.useState<Mov | null>(null);
+  const stats: DataTableStat[] = [
+    { label: "Monto total", value: "$1,850,861.71 MXN", icon: "▤", tone: "success" },
+    { label: "Membresías", value: "$69.00 MXN", icon: "▦", tone: "brand" },
+  ];
+  const cols: Column<Mov>[] = [
+    { key: "id", header: "ID", render: (m) => <span className="font-mono text-xs">{m.id.slice(0, 14)}…</span> },
+    { key: "trace", header: "Clave rastreo", render: (m) => <span className="font-mono text-xs">{m.trace.slice(0, 18)}</span> },
+    { key: "date", header: "Fecha" },
+    { key: "medaId", header: "Meda ID" },
+    { key: "type", header: "Tipo", render: (m) => <Badge variant={m.type === "Crédito" ? "success" : "error"}>{m.type}</Badge> },
+    { key: "network", header: "Red", render: (m) => <Badge variant={m.network === "Interna" ? "info" : "warning"}>{m.network}</Badge> },
+    { key: "amount", header: "Monto", align: "right", render: (m) => (
+      <span className={m.type === "Crédito" ? "font-semibold text-price-up" : "font-semibold text-fg"}>${m.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN</span>
+    ) },
+    { key: "status", header: "Estado", render: (m) => (
+      <span className={`text-sm ${m.status === "Completado" ? "text-success" : "text-info"}`}>{m.status}</span>
+    ) },
+    { key: "trace", header: "CEP", align: "right", render: (m) => m.status !== "Completado"
+      ? <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setDetail(m); }}>Ver CEP</Button>
+      : <span className="text-fg-tertiary">—</span> },
+  ];
   return (
-    <Card className="max-w-lg"><CardContent className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-fg">Detalle de transacción</h3>
-        <StatusPill status="SUCCESS" />
-      </div>
-      <div className="text-center py-4">
-        <p className="text-sm text-fg-secondary">Monto</p>
-        <p className="text-3xl font-semibold text-fg">$1,250.00</p>
-        <p className="text-sm text-fg-tertiary">MXN</p>
-      </div>
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between"><span className="text-fg-secondary">Orden</span><span className="text-fg">MX-9001</span></div>
-        <div className="flex justify-between"><span className="text-fg-secondary">Beneficiario</span><span className="text-fg">Juan Pérez</span></div>
-        <div className="flex justify-between"><span className="text-fg-secondary">Fecha</span><span className="text-fg">22 jun 2026</span></div>
-      </div>
-      <CopyField label="CLABE" value="012180012345678901" />
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={() => show("info", "Descargando comprobante…")}>Comprobante</Button>
-        <Button variant="danger" className="flex-1" onClick={() => setConfirm(true)}>Reportar</Button>
-      </div>
-      <ConfirmDialog open={confirm} onClose={() => setConfirm(false)}
-        onConfirm={() => { setConfirm(false); show("success", "Reporte enviado", { action: { label: "Deshacer", onClick: () => show("info", "Reporte cancelado") } }); }}
-        title="¿Reportar esta transacción?" description="Nuestro equipo la revisará en 24h." />
-    </CardContent></Card>
+    <>
+      <h1 className="mb-1 text-2xl font-semibold text-fg">Movimientos</h1>
+      <p className="mb-6 text-fg-secondary">Historial de entradas y salidas de la cuenta.</p>
+      <DataTable
+        title="MOVIMIENTOS" count={50} data={MOVS} columns={cols} rowKey={(m) => m.id + m.trace} stats={stats}
+        onRowClick={(m) => setDetail(m)}
+        searchFields={[
+          { placeholder: "ID Transacción", keys: ["id"] },
+          { placeholder: "Clave de rastreo", keys: ["trace"] },
+          { placeholder: "Meda ID", keys: ["medaId"] },
+        ]}
+      />
+      <DetailModal
+        open={!!detail} onClose={() => setDetail(null)} title="Comprobante Banxico (CEP)" icon="▤" size="lg"
+        fields={detail ? [
+          { label: "Concepto", value: "Pago" },
+          { label: "Estado", value: "Liquidado" },
+          { label: "Clave de rastreo", value: <span className="font-mono">{detail.trace.slice(0, 16)}</span> },
+          { label: "Cuenta origen", value: "012090004555164987" },
+          { label: "Cuenta destino", value: "646180191202426879" },
+          { label: "Monto", value: `$${detail.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN` },
+        ] : []}
+        footer={<><Button variant="outline" onClick={() => setDetail(null)}>Cerrar</Button><Button>⭳ Descargar CEP</Button></>}
+      >
+        <p className="text-sm text-fg-secondary">Comprobante Electrónico de Pago emitido por Banxico para esta operación SPEI®.</p>
+      </DetailModal>
+    </>
   );
 }
 
-// ---- Use-case 4: Login ----
-function LoginCase() {
+// ---------- Transfers ----------
+interface Trf { id: string; folio: string; beneficiary: string; clabe: string; amount: number; concept: string; status: string; date: string; }
+const TRFS: Trf[] = [
+  { id: "1", folio: "TRF-2001", beneficiary: "Comercializadora Norte SA", clabe: "0123**********4567", amount: 5000, concept: "Pago proveedor", status: "Success", date: "18 jun 2026" },
+  { id: "2", folio: "TRF-2002", beneficiary: "Juan Pérez López", clabe: "0145**********6789", amount: 1500, concept: "Reembolso gastos", status: "Processing", date: "21 jun 2026" },
+];
+
+function TransfersScreen({ onNew }: { onNew: () => void }) {
+  const cols: Column<Trf>[] = [
+    { key: "folio", header: "Folio", render: (t) => <span className="font-mono text-xs">{t.folio}</span> },
+    { key: "beneficiary", header: "Beneficiario", render: (t) => <span className="font-medium text-fg">{t.beneficiary}</span> },
+    { key: "clabe", header: "CLABE", render: (t) => <span className="font-mono text-xs text-fg-secondary">{t.clabe}</span> },
+    { key: "amount", header: "Monto", align: "right", render: (t) => <span className="font-semibold text-fg">${t.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span> },
+    { key: "concept", header: "Concepto" },
+    { key: "status", header: "Estado", render: (t) => (
+      <span className={`inline-flex items-center gap-1.5 text-sm ${t.status === "Success" ? "text-success" : "text-info"}`}>
+        <span className={`h-2 w-2 rounded-full ${t.status === "Success" ? "bg-success" : "bg-info"}`} />{t.status}
+      </span>
+    ) },
+    { key: "date", header: "Fecha", align: "right" },
+  ];
   return (
-    <Card className="max-w-sm mx-auto"><CardContent className="p-6">
-      <div className="flex justify-center mb-6"><MedaLogo /></div>
-      <h3 className="text-center font-semibold text-fg mb-6">Inicia sesión</h3>
-      <div className="space-y-4">
-        <FormField label="Correo" type="email" placeholder="tu@meda.com.mx" />
-        <FormField label="Contraseña" type="password" placeholder="••••••••" />
-        <Button className="w-full">Entrar</Button>
+    <>
+      <h1 className="mb-1 text-2xl font-semibold text-fg">Transferencias</h1>
+      <p className="mb-6 text-fg-secondary">Transferencias enviadas y su estado.</p>
+      <DataTable
+        title="TRANSFERENCIAS" count={TRFS.length} data={TRFS} columns={cols} rowKey={(t) => t.id}
+        actions={<Button onClick={onNew}>+ Nueva transferencia</Button>}
+      />
+    </>
+  );
+}
+
+function NewTransferScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="mx-auto max-w-xl">
+      <button onClick={onBack} className="mb-4 text-sm text-fg-secondary hover:text-fg">← Volver a transferencias</button>
+      <div className="rounded-meda border border-border-default bg-surface p-6">
+        <h1 className="text-xl font-semibold text-fg">Nueva transferencia</h1>
+        <p className="mb-6 text-sm text-fg-secondary">Validación CLABE, RFC y confirmación antes de enviar.</p>
+        <div className="space-y-4">
+          <Field><FieldLabel htmlFor="b">Beneficiario</FieldLabel><Input id="b" placeholder="Nombre completo" /></Field>
+          <Field><FieldLabel htmlFor="c">CLABE (18 dígitos)</FieldLabel><Input id="c" placeholder="0000 0000 0000 0000 00" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field><FieldLabel htmlFor="r">RFC (opcional)</FieldLabel><Input id="r" placeholder="XAXX010101000" /></Field>
+            <Field><FieldLabel htmlFor="a">Monto</FieldLabel><Input id="a" placeholder="$ 0.00" /></Field>
+          </div>
+          <Field><FieldLabel htmlFor="co">Concepto (opcional)</FieldLabel><Input id="co" placeholder="Pago de…" /></Field>
+          <Button className="w-full">Revisar transferencia</Button>
+        </div>
       </div>
-    </CardContent></Card>
+    </div>
   );
 }

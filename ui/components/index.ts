@@ -46,3 +46,11 @@ export type { ComboboxOption } from "./combobox";
 export { DatePicker } from "./date-picker";
 // PdfViewer is NOT exported here — it needs react-pdf. Import it directly only where used:
 //   import { PdfViewer } from "@/components/ui/pdf-viewer";  (run: pnpm add -E react-pdf)
+export { InputOTP } from "./input-otp";
+export { InputGroup, InputGroupAddon, InputGroupInput } from "./input-group";
+export { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "./field";
+export { AppShell } from "./app-shell";
+export type { NavItem, NavGroup } from "./app-shell";
+export { DetailModal } from "./detail-modal";
+export type { DetailField } from "./detail-modal";
+export type { DataTableStat } from "./data-table";

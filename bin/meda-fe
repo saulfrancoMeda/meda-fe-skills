@@ -332,6 +332,7 @@ MSWEOF
       fi
       if [ -f "$UI_SRC/templates/components-page.tsx" ]; then
         mkdir -p "$sd/app/components"; cp "$UI_SRC/templates/components-page.tsx" "$sd/app/components/page.tsx"
+        cp "$UI_SRC/templates/component-examples.tsx" "$sd/app/components/component-examples.tsx" 2>/dev/null
       fi
       ok "Pages created: / (welcome), /showcase, /components."
     fi

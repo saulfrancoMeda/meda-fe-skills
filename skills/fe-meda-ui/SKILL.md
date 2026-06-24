@@ -203,3 +203,99 @@ because they read CSS tokens at runtime. Why opt-in: recharts is heavy; not ever
 The generated `/showcase` page shows REAL fintech screens (account dashboard, new transfer,
 transaction detail, login) — click a use-case card to see the actual screen built with MEDA UI.
 Use it as a reference for how to compose primitives into real business screens, not just isolated demos.
+
+## New form components (input-otp, input-group, field)
+
+### InputOTP — one-time-password (2FA / SMS codes)
+```tsx
+import { InputOTP } from "@/components/ui/input-otp";
+const [code, setCode] = useState("");
+<InputOTP length={6} value={code} onChange={setCode} />   // auto-advance, paste-aware, backspace
+```
+
+### InputGroup — input with addons inside (icon / text prefix / button)
+```tsx
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+<InputGroup>
+  <InputGroupAddon>$</InputGroupAddon>
+  <InputGroupInput placeholder="0.00" />
+  <InputGroupAddon position="trailing">MXN</InputGroupAddon>
+</InputGroup>
+```
+
+### Field — composable form field (shadcn's newer pattern)
+More flexible than FormField: compose ANY control with label/description/error.
+```tsx
+import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
+<FieldGroup>
+  <Field>
+    <FieldLabel htmlFor="email">Correo</FieldLabel>
+    <Input id="email" />
+    <FieldDescription>Nunca lo compartiremos.</FieldDescription>
+    <FieldError>{errors.email}</FieldError>   {/* renders only if children present */}
+  </Field>
+</FieldGroup>
+```
+Prefer `Field` for new forms (composable, works with any control); `FormField` stays for the simple
+label+input+error case.
+
+## Component explorer (/components)
+The generated `/components` page is a shadcn-style explorer: a sidebar lists components grouped by
+category; clicking one opens a detail panel (with motion) showing MULTIPLE labeled examples per
+component, each with a "Ver código" toggle to see the exact usage. The examples live in
+`app/components/component-examples.tsx` as a data array — add a new component's examples there.
+
+## Production-grade admin patterns (DataTable, AppShell, DetailModal)
+These three make back-office screens look like the real MEDA admin — use them instead of building
+basic tables/modals by hand.
+
+### DataTable — the centerpiece for any list/table screen
+Built-in toolbar: count badge, summary stat chips, search fields, an actions slot, column visibility
+(Columnas visibles), CSV export, zen/fullscreen mode, density toggle, and pagination with rows-per-page.
+Don't hand-roll tables — compose columns + pass data.
+```tsx
+import { DataTable, type Column, type DataTableStat } from "@/components/ui/data-table";
+const cols: Column<Mov>[] = [
+  { key: "id", header: "ID", render: (m) => <span className="font-mono text-xs">{m.id}</span> },
+  { key: "amount", header: "Monto", align: "right", render: (m) => <span className="text-price-up">${m.amount}</span> },
+  { key: "status", header: "Estado", render: (m) => <Badge variant="success">{m.status}</Badge> },
+];
+<DataTable
+  title="MOVIMIENTOS" count={50} data={rows} columns={cols} rowKey={(m) => m.id}
+  stats={[{ label: "Monto total", value: "$1,850,861 MXN", tone: "success" }]}
+  searchFields={[{ placeholder: "ID Transacción", keys: ["id"] }]}
+  actions={<Button>+ Nueva</Button>}
+  onRowClick={(m) => openDetail(m)}
+/>
+```
+Notes: pagination is client-side by default (set `paginate={false}` for tiny tables); export defaults to
+CSV of visible columns (override with `onExport`); columns can be `hidden` by default and toggled on.
+
+### AppShell — sidebar + top bar layout for back-office
+```tsx
+import { AppShell } from "@/components/ui/app-shell";
+<AppShell activeHref="/movements" topRight={<LanguageSwitcher />}
+  groups={[
+    { title: "Operación", items: [
+      { label: "Movimientos", href: "/movements", icon: "▤" },
+      { label: "Transferencias", href: "/transfers", icon: "⇄" },
+    ] },
+    { title: "Administración", items: [{ label: "Usuarios", href: "/users", icon: "◍" }] },
+  ]}>
+  {children}
+</AppShell>
+```
+
+### DetailModal — rich record inspector (CEP receipt, user detail)
+Header with icon+title, a key-value summary grid, free content, footer actions. Closes on overlay/Escape.
+```tsx
+import { DetailModal } from "@/components/ui/detail-modal";
+<DetailModal open={!!row} onClose={() => setRow(null)} title="Comprobante (CEP)" icon="▤" size="lg"
+  fields={[{ label: "Estado", value: "Liquidado" }, { label: "Monto", value: "$300.00 MXN" }]}
+  footer={<Button>⭳ Descargar</Button>}>
+  <p className="text-sm text-fg-secondary">Detalle…</p>
+</DetailModal>
+```
+
+Rule for list/admin screens: AppShell (layout) + DataTable (the list, with its toolbar) + DetailModal
+(row detail) + Dialog (create/edit form). That combination IS the MEDA admin look — don't reinvent it.

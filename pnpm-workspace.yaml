@@ -1,0 +1,13 @@
+# This toolbox never runs Next.js — it only copies template files into generated apps.
+# We intentionally do NOT build these native dependencies (image optimization, SWC, file
+# watcher). They are pulled in transitively by `next` (an editor-only devDependency for type
+# resolution). Declaring them here is the explicit "do not build" decision pnpm asks for.
+onlyBuiltDependencies: []
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+  - '@swc/core'
+  - sharp
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  '@swc/core': set this to true or false
+  sharp: set this to true or false
