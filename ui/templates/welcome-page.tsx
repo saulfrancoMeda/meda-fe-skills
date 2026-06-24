@@ -5,8 +5,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 export default function Home() {
   return (
     <main className="min-h-screen bg-bg">
-      <header className="mx-auto flex max-w-5xl items-center justify-between p-6">
-        <MedaLogo className="h-8 text-fg" />
+      <header className="mx-auto flex max-w-5xl items-center justify-end p-6">
         <ThemeToggle />
       </header>
       <div className="mx-auto flex max-w-3xl flex-col items-center px-6 py-24 text-center meda-page-enter">

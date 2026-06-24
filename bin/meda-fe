@@ -338,6 +338,7 @@ MSWEOF
         node -e '
           const fs=require("fs"); const p=process.argv[1];
           let s=fs.readFileSync(p,"utf8");
+          s=s.replace(/<html\s/, "<html suppressHydrationWarning ");
           const script = `      <head><script dangerouslySetInnerHTML={{ __html: \`(function(){try{var t=localStorage.getItem(\"meda-theme\");if(t===\"dark\"||(!t&&window.matchMedia(\"(prefers-color-scheme: dark)\").matches)){document.documentElement.classList.add(\"dark\")}}catch(e){}})()\` }} /></head>\n`;
           s=s.replace(/(<html[^>]*>)\s*\n/, "$1\n"+script);
           fs.writeFileSync(p,s);
@@ -530,6 +531,8 @@ cmd_add() {
     # auth feature
     mkdir -p "$BASE/features/auth"
     cp "$UI_SRC"/features/auth/*.tsx "$BASE/features/auth/" 2>/dev/null
+    mkdir -p "$BASE/features/transfer"
+    cp "$UI_SRC"/features/transfer/*.tsx "$BASE/features/transfer/" 2>/dev/null
     ok "All MEDA UI components copied to ${rel}components/ui/ (+ motion, features/auth)"
   else
     local f="$UI_SRC/components/$comp.tsx"

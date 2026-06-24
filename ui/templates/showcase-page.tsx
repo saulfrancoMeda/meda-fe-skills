@@ -10,6 +10,11 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { Avatar } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ToastProvider, useToast } from "@/components/ui/toast";
+import { CopyField } from "@/components/ui/copy-field";
+import { StatusPill } from "@/components/ui/status-pill";
+import { AmountInput } from "@/components/ui/amount-input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TransferForm } from "@/features/transfer/transfer-form";
 import { MedaLogo } from "@/features/auth/meda-logo";
 
 interface Tx { orderNo: string; merchant: string; amount: number; status: string; date: string; }
@@ -89,6 +94,29 @@ export default function Home() {
 
           <Section title="Data table (sort, columns, density)">
             <DataTable columns={cols} data={rows} rowKey={(r) => r.orderNo} />
+          </Section>
+
+          <Section title="Fintech components">
+            <div className="grid gap-6 sm:grid-cols-2">
+              <Card>
+                <CardHeader><CardTitle>Amount & status</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="flex flex-col gap-4">
+                    <AmountInput value={1234.5} onChange={() => {}} />
+                    <div className="flex gap-4">
+                      <StatusPill status="SUCCESS" />
+                      <StatusPill status="PROCESSING" />
+                      <StatusPill status="FAILED" />
+                    </div>
+                    <CopyField label="CLABE" value="012180012345678901" masked />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Transfer form (RHF + Zod + confirm modal)</CardTitle></CardHeader>
+                <CardContent><TransferForm /></CardContent>
+              </Card>
+            </div>
           </Section>
 
           <Section title="Card & form">
