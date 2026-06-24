@@ -160,7 +160,7 @@ cmd_new() {
   read -rp "   add i18n (es/en/zh)? y/n [y]: " p_i18n; p_i18n=${p_i18n:-y}
   info ""
 
-  info "${b}8) Generate now${off}"
+  info "${b}9) Generate now${off}"
   info "   Why: yes = the CLI scaffolds the full MEDA Next.js project + installs everything, ready for"
   info "   'pnpm dev'. no = only records your choices so you (or the AI) generate later."
   read -rp "   generate the Next.js project now? y/n [y]: " p_gen; p_gen=${p_gen:-y}
@@ -392,6 +392,15 @@ NCEOF
       python3 "$ROOT_DIR/bin/wrap-i18n-layout.py" "$sdi/app/layout.tsx" 2>/dev/null && ok "Layout wrapped with NextIntlClientProvider."
     fi
     ok "i18n set up (next-intl, es/en/zh). See docs/i18n.md."
+    # Use the translatable welcome page (already includes the LanguageSwitcher)
+    if [ -f "$UI_SRC/templates/welcome-page-i18n.tsx" ] && [ -f "$sdi/app/page.tsx" ]; then
+      cp "$UI_SRC/templates/welcome-page-i18n.tsx" "$sdi/app/page.tsx"
+    fi
+    # Add the LanguageSwitcher to the OTHER pages (showcase, components) next to ThemeToggle
+    for pg in "$sdi/app/showcase/page.tsx" "$sdi/app/components/page.tsx"; do
+      [ -f "$pg" ] && python3 "$ROOT_DIR/bin/add-language-switcher.py" "$pg" 2>/dev/null
+    done
+    ok "LanguageSwitcher added to pages; welcome is translatable (es/en/zh)."
     set -e
   fi
 

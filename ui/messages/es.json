@@ -19,5 +19,11 @@
     "status": "Estado",
     "date": "Fecha",
     "merchant": "Comercio"
+  },
+  "welcome": {
+    "title": "Bienvenido a tu app MEDA",
+    "subtitle": "Construido con los estándares frontend de MEDA: Next.js, TypeScript, Tailwind y la librería MEDA UI. Empieza explorando los componentes y luego construye tus features.",
+    "showcase": "Ver showcase de componentes",
+    "browse": "Ver todos los componentes"
   }
 }

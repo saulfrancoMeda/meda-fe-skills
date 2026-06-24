@@ -19,5 +19,11 @@
     "status": "状态",
     "date": "日期",
     "merchant": "商户"
+  },
+  "welcome": {
+    "title": "欢迎使用您的 MEDA 应用",
+    "subtitle": "基于 MEDA 前端标准构建：Next.js、TypeScript、Tailwind 和 MEDA UI 组件库。先浏览组件，然后构建您的功能。",
+    "showcase": "查看组件展示",
+    "browse": "浏览所有组件"
   }
 }
