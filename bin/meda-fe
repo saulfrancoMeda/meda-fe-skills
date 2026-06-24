@@ -372,9 +372,9 @@ CSSEOF
     info "Installing i18n (next-intl)..."
     ( cd "$TARGET" && pnpm add -E next-intl ) >/dev/null 2>&1
     local sdi="$TARGET/src"; [ -d "$sdi" ] || sdi="$TARGET"
-    mkdir -p "$sdi/i18n" "$TARGET/messages" "$sdi/features/i18n"
+    mkdir -p "$sdi/i18n" "$sdi/messages" "$sdi/features/i18n"
     cp "$UI_SRC"/i18n/request.ts "$sdi/i18n/request.ts" 2>/dev/null
-    cp "$UI_SRC"/messages/*.json "$TARGET/messages/" 2>/dev/null
+    cp "$UI_SRC"/messages/*.json "$sdi/messages/" 2>/dev/null
     cp "$UI_SRC"/features/i18n/*.tsx "$sdi/features/i18n/" 2>/dev/null
     # next.config: wrap with next-intl plugin
     if [ -f "$TARGET/next.config.ts" ]; then
