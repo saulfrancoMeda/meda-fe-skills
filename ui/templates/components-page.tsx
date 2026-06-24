@@ -19,6 +19,16 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { AmountInput } from "@/components/ui/amount-input";
 import { CopyField } from "@/components/ui/copy-field";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { DropdownMenu, DropdownItem } from "@/components/ui/dropdown-menu";
+import { Tooltip } from "@/components/ui/tooltip";
+import { Accordion } from "@/components/ui/accordion";
+import { Popover } from "@/components/ui/popover";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { SuccessIcon, ErrorIcon, WaitingIcon, GeolocationIcon } from "@/components/icons/status-icons";
+import { Combobox } from "@/components/ui/combobox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { MedaLogo } from "@/features/auth/meda-logo";
 
 function Demo({ name, children }: { name: string; children: React.ReactNode }) {
@@ -80,6 +90,28 @@ export default function ComponentsPage() {
           <Demo name="StatusPill"><StatusPill status="SUCCESS" /><StatusPill status="PROCESSING" /><StatusPill status="FAILED" /></Demo>
           <Demo name="AmountInput"><AmountInput value={1234.5} onChange={() => {}} /></Demo>
           <Demo name="CopyField"><div className="w-full"><CopyField label="CLABE" value="012180012345678901" masked /></div></Demo>
+        </Group>
+
+        <Group title="Advanced fintech inputs">
+          <Demo name="Combobox (searchable)"><div className="w-full"><Combobox value="" onChange={() => {}} options={[{ value: "1", label: "Binance" }, { value: "2", label: "BPN" }, { value: "3", label: "STP" }]} placeholder="Select merchant" /></div></Demo>
+          <Demo name="DatePicker"><div className="w-full"><DatePicker value={null} onChange={() => {}} /></div></Demo>
+        </Group>
+
+        <Group title="Overlays & navigation">
+          <Demo name="DropdownMenu"><DropdownMenu trigger={<Button variant="outline">Actions</Button>}><DropdownItem>Edit</DropdownItem><DropdownItem danger>Delete</DropdownItem></DropdownMenu></Demo>
+          <Demo name="Tooltip"><Tooltip content="Helpful hint"><span className="text-fg underline">Hover me</span></Tooltip></Demo>
+          <Demo name="Popover"><Popover trigger={<Button variant="outline">Open</Button>}><p className="text-sm text-fg">Popover content</p></Popover></Demo>
+          <Demo name="Breadcrumb"><Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Transactions" }]} /></Demo>
+        </Group>
+
+        <Group title="More inputs & feedback">
+          <Demo name="RadioGroup"><RadioGroup name="t" value="spei" onChange={() => {}} options={[{ value: "spei", label: "SPEI" }, { value: "card", label: "Card" }]} /></Demo>
+          <Demo name="Progress"><div className="w-full"><Progress value={66} /></div></Demo>
+          <Demo name="Accordion"><div className="w-full"><Accordion items={[{ id: "1", title: "Section one", content: "Hidden content" }]} /></div></Demo>
+        </Group>
+
+        <Group title="Brand icons">
+          <Demo name="Status icons (MEDA brand)"><SuccessIcon size={40} /><ErrorIcon size={40} /><WaitingIcon size={40} /><GeolocationIcon size={40} /></Demo>
         </Group>
 
         <Group title="Layout">

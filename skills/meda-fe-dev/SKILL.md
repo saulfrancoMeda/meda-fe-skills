@@ -36,6 +36,7 @@ standards even if unmentioned. **Reply in the user's language.**
 ## STEP 2 — Always-on conventions
 Start any task by following `fe-dev-process` (the phases: understand → plan → build → verify → ship).
 When the backend endpoint isn't ready, use `fe-mocking` (MSW) instead of hardcoding fakes.
+When migrating a legacy project (JS→TS or old styles→MEDA UI), follow `fe-migration`.
 Apply `fe-react-principles` (SRP, DRY, separation of concerns, edge cases), `fe-project-structure`,
 `fe-prohibited-practices`, `fe-security`, `fe-security` (incl. supply-chain + devops) as the baseline for any
 change. Detect the repo's real choices (Zustand vs Redux, TanStack vs SWR) and follow them; don't

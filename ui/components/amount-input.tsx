@@ -21,7 +21,7 @@ export function AmountInput({ value, onChange, currency = "MXN", error, placehol
     if (/^\d*\.?\d{0,2}$/.test(raw)) onChange(Number(raw));
   };
   return (
-    <div className={cn("flex items-center rounded-meda border bg-surface px-3 h-11",
+    <div className={cn("flex items-center rounded-control border bg-surface px-3 h-10",
       error ? "border-error" : "border-border-default focus-within:border-brand", className)}>
       <span className="mr-2 text-fg-secondary text-sm">{currency === "MXN" ? "$" : currency}</span>
       <input
@@ -30,7 +30,7 @@ export function AmountInput({ value, onChange, currency = "MXN", error, placehol
         value={value === "" ? "" : value}
         onChange={handle}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-fg outline-none text-[15px]"
+        className="flex-1 bg-transparent text-fg outline-none text-sm"
       />
       <span className="ml-2 text-fg-tertiary text-xs">{currency}</span>
     </div>

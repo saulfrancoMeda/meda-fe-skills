@@ -38,3 +38,10 @@
 @media (prefers-reduced-motion: reduce) {
   .meda-dialog-in { animation: none; }
 }
+
+/* Sheet / drawer slide */
+@keyframes meda-slide-left { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes meda-slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.meda-slide-left { animation: meda-slide-left 0.2s ease-out; }
+.meda-slide-right { animation: meda-slide-right 0.2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .meda-slide-left, .meda-slide-right { animation: none; } }

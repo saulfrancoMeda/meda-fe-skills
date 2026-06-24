@@ -1,67 +1,79 @@
 /**
- * MEDA UI — Design Tokens (Tailwind v4, CSS-first)
- * Import AFTER `@import "tailwindcss"` in your globals.css.
- * Generates utility classes: bg-brand, text-fg, border-default, bg-surface, rounded-meda, etc.
- * Dark mode via the `.dark` class on <html> (toggle with JS).
+ * MEDA UI — Design Tokens (Tailwind v4, CSS-first) — aligned to Binance's UI system.
+ * Import AFTER `@import "tailwindcss"` in globals.css.
+ * Dark mode via the `.dark` class on <html> (default ON — Binance presents dark-first).
  */
 
-/* Enable class-based dark mode (v4 needs this line; darkMode:'class' config is gone) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Map design tokens to utility classes */
 @theme {
   --color-brand: #FCD535;
   --color-brand-light: #FDDD66;
   --color-brand-dark: #C99400;
   --color-brand-foreground: #0A0F14;
 
-  --color-bg: #FCFCFC;
+  /* Light mode (kept available via toggle) */
+  --color-bg: #FAFAFA;
   --color-surface: #FFFFFF;
-  --color-muted: #F5F6FA;
+  --color-surface-raised: #FFFFFF;
+  --color-muted: #F5F5F5;
 
-  --color-fg: #0A0F14;
-  --color-fg-secondary: #6b7280;
-  --color-fg-tertiary: #545454;
+  --color-fg: #1E2329;
+  --color-fg-secondary: #707A8A;
+  --color-fg-tertiary: #929AA5;
 
-  --color-border-default: #E0E4EC;
-  --color-border-strong: #B7BDC6;
+  --color-border-default: #EAECEF;
+  --color-border-strong: #C7CCD3;
 
-  --color-success: #10b981;
-  --color-success-dark: #059669;
-  --color-error: #ef4444;
-  --color-error-dark: #dc2626;
-  --color-warning: #f59e0b;
-  --color-warning-dark: #d97706;
-  --color-info: #3b82f6;
-  --color-info-dark: #2563eb;
+  /* Status */
+  --color-success: #0ECB81;       /* Binance green */
+  --color-success-dark: #0BA572;
+  --color-error: #F6465D;         /* Binance red */
+  --color-error-dark: #D6354A;
+  --color-warning: #F0B90B;
+  --color-warning-dark: #C99400;
+  --color-info: #3375BB;
+  --color-info-dark: #2A5E96;
 
-  --color-table-head: #F5F6FA;
-  --color-table-title: #0A0F14;
+  /* Price up/down — THE Binance trading colors (semantic, fintech-specific) */
+  --color-price-up: #0ECB81;
+  --color-price-down: #F6465D;
+
+  --color-table-head: #F5F5F5;
+  --color-table-title: #1E2329;
   --color-table-subtitle: #929AA5;
 
-  --radius-meda: 8px;
+  /* Radii — Binance uses subtle 4px on controls, 8px on cards */
+  --radius-control: 4px;          /* inputs, buttons */
+  --radius-meda: 8px;             /* cards, surfaces */
+
+  /* Control heights — Binance system */
+  --height-control-sm: 32px;
+  --height-control: 40px;         /* default */
+  --height-control-lg: 48px;      /* primary CTA */
+
   --font-sans: "Binance Plex", system-ui, -apple-system, sans-serif;
 }
 
-/* Dark mode overrides — same token names, dark values */
+/* Dark mode — Binance's real dark palette (DEFAULT) */
 .dark {
-  --color-bg: #0b0e11;
-  --color-surface: #181a20;
-  --color-muted: #1e2329;
+  --color-bg: #0B0E11;
+  --color-surface: #181A20;
+  --color-surface-raised: #1E2329;
+  --color-muted: #1E2329;
 
-  --color-fg: #f9fafb;
-  --color-fg-secondary: #a1a7b3;
-  --color-fg-tertiary: #848e9c;
+  --color-fg: #EAECEF;
+  --color-fg-secondary: #B7BDC6;
+  --color-fg-tertiary: #848E9C;
 
-  --color-border-default: #2b3139;
-  --color-border-strong: #474d57;
+  --color-border-default: #2B3139;
+  --color-border-strong: #474D57;
 
-  --color-table-head: #1e2329;
-  --color-table-title: #f9fafb;
-  --color-table-subtitle: #848e9c;
+  --color-table-head: #1E2329;
+  --color-table-title: #EAECEF;
+  --color-table-subtitle: #848E9C;
 }
 
-/* Base: apply bg + text + default border color so the page and components look right */
 @layer base {
   body { background-color: var(--color-bg); color: var(--color-fg); }
   * { border-color: var(--color-border-default); }

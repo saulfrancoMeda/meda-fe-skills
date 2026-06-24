@@ -12,7 +12,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-meda font-semibold font-sans " +
+  "inline-flex items-center justify-center gap-2 rounded-control font-semibold font-sans " +
   "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 " +
   "disabled:pointer-events-none disabled:opacity-60";
 
@@ -27,8 +27,8 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-11 px-4 text-[15px]",
+  sm: "h-8 px-3 text-sm",
+  md: "h-10 px-4 text-sm",
   lg: "h-12 px-6 text-base",
 };
 

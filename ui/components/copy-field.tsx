@@ -21,7 +21,7 @@ export function CopyField({ label, value, masked, className }: CopyFieldProps) {
   return (
     <div className={className}>
       {label && <span className="mb-1 block text-sm text-fg-secondary">{label}</span>}
-      <div className="flex items-center justify-between rounded-meda border border-border-default bg-muted px-3 h-11">
+      <div className="flex items-center justify-between rounded-control border border-border-default bg-muted px-3 h-10">
         <span className="font-mono text-sm text-fg tracking-wide">{display}</span>
         <button type="button" onClick={copy} className="text-xs font-medium text-brand-dark hover:underline">
           {copied ? "Copied ✓" : "Copy"}

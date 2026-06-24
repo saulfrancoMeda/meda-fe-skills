@@ -267,7 +267,7 @@ EOF
   local devdeps=""
   [ "$p_api" = "y" ] && devdeps="$devdeps msw"    # MSW for mocking endpoints not yet delivered
   if [ "$p_ui" = "y" ]; then
-    deps="$deps clsx tailwind-merge react-hook-form zod @hookform/resolvers"  # MEDA UI + login form
+    deps="$deps clsx tailwind-merge react-hook-form zod @hookform/resolvers lucide-react"  # MEDA UI + forms + icons (lucide = shadcn's icon set)
   fi
   if [ -n "$deps" ]; then
     info "Installing extra deps (exact versions, no caret):$deps"
@@ -345,7 +345,7 @@ MSWEOF
           const fs=require("fs"); const p=process.argv[1];
           let s=fs.readFileSync(p,"utf8");
           s=s.replace(/<html\s/, "<html suppressHydrationWarning ");
-          const script = `      <head><script dangerouslySetInnerHTML={{ __html: \`(function(){try{var t=localStorage.getItem(\"meda-theme\");if(t===\"dark\"||(!t&&window.matchMedia(\"(prefers-color-scheme: dark)\").matches)){document.documentElement.classList.add(\"dark\")}}catch(e){}})()\` }} /></head>\n`;
+          const script = `      <head><script dangerouslySetInnerHTML={{ __html: \`(function(){try{var t=localStorage.getItem(\"meda-theme\");if(t!==\"light\"){document.documentElement.classList.add(\"dark\")}}catch(e){}})()\` }} /></head>\n`;
           s=s.replace(/(<html[^>]*>)\s*\n/, "$1\n"+script);
           fs.writeFileSync(p,s);
         ' "$sd/app/layout.tsx" 2>/dev/null && ok "Layout: MEDA title + anti-flash theme script."
@@ -570,6 +570,7 @@ cmd_add() {
   local rel="src/"; [ "$BASE" = "$TARGET" ] && rel=""
   if [ -z "$comp" ] || [ "$comp" = "all" ]; then
     cp "$UI_SRC"/components/*.tsx "$UI_SRC"/components/index.ts "$BASE/components/ui/" 2>/dev/null
+    cp "$UI_SRC"/components/*.tsx.template "$BASE/components/ui/" 2>/dev/null   # pdf-viewer (opt-in, needs react-pdf)
     # motion (page transitions) + its CSS
     mkdir -p "$BASE/components/ui/motion"
     cp "$UI_SRC"/components/motion/*.tsx "$BASE/components/ui/motion/" 2>/dev/null
@@ -579,7 +580,10 @@ cmd_add() {
     cp "$UI_SRC"/features/auth/*.tsx "$BASE/features/auth/" 2>/dev/null
     mkdir -p "$BASE/features/transfer"
     cp "$UI_SRC"/features/transfer/*.tsx "$BASE/features/transfer/" 2>/dev/null
-    ok "All MEDA UI components copied to ${rel}components/ui/ (+ motion, features/auth)"
+    # brand status icons (SVG, no external lib)
+    mkdir -p "$BASE/components/icons"
+    cp "$UI_SRC"/icons/*.tsx "$BASE/components/icons/" 2>/dev/null
+    ok "All MEDA UI components copied to ${rel}components/ui/ (+ motion, icons, features)"
   else
     local f="$UI_SRC/components/$comp.tsx"
     [ -f "$f" ] || { err "Unknown component: $comp"; info "Available:"; ls "$UI_SRC/components"/*.tsx | xargs -n1 basename | sed 's/.tsx//' | sed 's/^/  /'; exit 1; }
