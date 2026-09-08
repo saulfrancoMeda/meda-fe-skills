@@ -3,9 +3,10 @@
 # watcher). They are pulled in transitively by `next` (an editor-only devDependency for type
 # resolution). Declaring them here is the explicit "do not build" decision pnpm asks for.
 overrides:
-  nanoid: 3.3.16
-  postcss: 8.5.12
-  sharp: 0.35.0
+  nanoid: 3.3.18
+  postcss: 8.5.23
+  sharp: 0.35.4
+  baseline-browser-mapping: 2.11.0
 onlyBuiltDependencies: []
 ignoredBuiltDependencies:
   - '@parcel/watcher'
